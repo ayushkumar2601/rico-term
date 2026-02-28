@@ -37,7 +37,7 @@ referencing==0.37.0
 requests==2.32.5
 rfc3339-validator==0.1.4
 rich==14.3.3
--e git+https://github.com/ayushkumar2601/Rico-private.git@bd14b6f359c4544eff07a50cc3af13cbd0eb7e55#egg=rico_sec
+-e git+https://github.com/ayushkumar2601/Rico-term.git@main#egg=rico_sec
 rpds-py==0.30.0
 ruamel.yaml==0.19.1
 shellingham==1.5.4
