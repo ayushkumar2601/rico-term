@@ -54,7 +54,7 @@ def get_top_successful_payloads(
         rows = cur.fetchall()
         payloads = [row[0] for row in rows]
         
-        logger.info(f"✓ Retrieved {len(payloads)} successful payloads")
+        logger.info(f"[OK] Retrieved {len(payloads)} successful payloads")
         
         return payloads
         
@@ -113,7 +113,7 @@ def get_payload_statistics(vulnerability_type: str) -> Dict[str, Any]:
                 "unique_frameworks": row[4] or 0
             }
             
-            logger.info(f"✓ Statistics: {stats}")
+            logger.info(f"[OK] Statistics: {stats}")
             return stats
         else:
             return {
@@ -187,7 +187,7 @@ def get_vulnerable_endpoints_by_type(
                 "timestamp": str(row[6])
             })
         
-        logger.info(f"✓ Retrieved {len(endpoints)} vulnerable endpoints")
+        logger.info(f"[OK] Retrieved {len(endpoints)} vulnerable endpoints")
         return endpoints
         
     except Exception as e:
@@ -250,7 +250,7 @@ def get_scan_history(api_base_url: str, limit: int = 5) -> List[Dict[str, Any]]:
                 "timestamp": str(row[7])
             })
         
-        logger.info(f"✓ Retrieved {len(scans)} scan records")
+        logger.info(f"[OK] Retrieved {len(scans)} scan records")
         return scans
         
     except Exception as e:
@@ -318,7 +318,7 @@ def get_framework_specific_payloads(
                 "timestamp": str(row[5])
             })
         
-        logger.info(f"✓ Retrieved {len(payloads)} framework-specific payloads")
+        logger.info(f"[OK] Retrieved {len(payloads)} framework-specific payloads")
         return payloads
         
     except Exception as e:

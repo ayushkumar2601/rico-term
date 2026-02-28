@@ -53,7 +53,7 @@ def insert_scan(scan_data: Dict[str, Any]) -> Optional[str]:
         ))
         
         conn.commit()
-        logger.info(f"✓ Scan record inserted successfully: {scan_id}")
+        logger.info(f"[OK] Scan record inserted successfully: {scan_id}")
         
         return scan_id
         
@@ -123,7 +123,7 @@ def insert_payload_result(data: Dict[str, Any]) -> Optional[str]:
         conn.commit()
         
         if data.get("exploit_success"):
-            logger.info(f"✓ Successful payload logged: {data.get('vulnerability_type')} on {data.get('endpoint_path')}")
+            logger.info(f"[OK] Successful payload logged: {data.get('vulnerability_type')} on {data.get('endpoint_path')}")
         else:
             logger.debug(f"Payload result logged: {payload_id}")
         
@@ -189,7 +189,7 @@ def insert_vulnerability(vuln_data: Dict[str, Any]) -> Optional[str]:
         ))
         
         conn.commit()
-        logger.info(f"✓ Vulnerability record inserted: {vuln_id}")
+        logger.info(f"[OK] Vulnerability record inserted: {vuln_id}")
         
         return vuln_id
         

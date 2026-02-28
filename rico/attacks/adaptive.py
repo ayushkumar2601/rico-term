@@ -37,7 +37,7 @@ class AdaptiveAttackEngine:
         self.snowflake_enabled = is_snowflake_enabled()
         
         if self.snowflake_enabled:
-            logger.info("✓ Adaptive attack engine initialized with Snowflake intelligence")
+            logger.info("[OK] Adaptive attack engine initialized with Snowflake intelligence")
         else:
             logger.info("Adaptive attack engine initialized (Snowflake disabled)")
     
@@ -75,7 +75,7 @@ class AdaptiveAttackEngine:
             )
             
             if historical_payloads:
-                logger.info(f"✓ Found {len(historical_payloads)} successful historical payloads")
+                logger.info(f"[OK] Found {len(historical_payloads)} successful historical payloads")
                 
                 # Get statistics
                 stats = get_payload_statistics(vulnerability_type)
@@ -94,7 +94,7 @@ class AdaptiveAttackEngine:
                 )
                 
                 if adaptive_payload:
-                    logger.info(f"✓ Cortex generated adaptive payload: {adaptive_payload[:50]}...")
+                    logger.info(f"[OK] Cortex generated adaptive payload: {adaptive_payload[:50]}...")
                     
                     # Combine: adaptive payload + historical + base
                     all_payloads = [adaptive_payload] + historical_payloads
@@ -179,7 +179,7 @@ class AdaptiveAttackEngine:
             
             if payload_id:
                 if exploit_success:
-                    logger.info(f"✓ Successful exploit logged to Snowflake: {payload_id}")
+                    logger.info(f"[OK] Successful exploit logged to Snowflake: {payload_id}")
                 else:
                     logger.debug(f"Payload result logged: {payload_id}")
                 return True
@@ -216,7 +216,7 @@ class AdaptiveAttackEngine:
             )
             
             if payloads:
-                logger.info(f"✓ Retrieved {len(payloads)} {api_framework}-specific payloads")
+                logger.info(f"[OK] Retrieved {len(payloads)} {api_framework}-specific payloads")
                 
                 # Extract patterns
                 common_patterns = []

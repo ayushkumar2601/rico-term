@@ -65,7 +65,7 @@ def cortex_complete(
         
         if result and result[0]:
             response = result[0]
-            logger.info(f"✓ Cortex response received ({len(response)} chars)")
+            logger.info(f"[OK] Cortex response received ({len(response)} chars)")
             logger.debug(f"Response: {response[:200]}...")
             return response
         else:
@@ -140,7 +140,7 @@ Payload:"""
     if response:
         # Extract just the payload (remove any extra text)
         payload = response.strip().split('\n')[0]
-        logger.info(f"✓ Generated adaptive payload: {payload[:50]}...")
+        logger.info(f"[OK] Generated adaptive payload: {payload[:50]}...")
         return payload
     else:
         return None
@@ -260,7 +260,7 @@ New Payload:"""
     
     if response:
         payload = response.strip().split('\n')[0]
-        logger.info(f"✓ Cortex suggested alternative payload: {payload[:50]}...")
+        logger.info(f"[OK] Cortex suggested alternative payload: {payload[:50]}...")
         return payload
     else:
         return None

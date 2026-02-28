@@ -64,7 +64,7 @@ def get_connection():
             schema="SECURITY"
         )
         
-        logger.info("✓ Snowflake connection established successfully")
+        logger.info("[OK] Snowflake connection established successfully")
         return conn
         
     except snowflake.connector.errors.DatabaseError as e:
@@ -90,7 +90,7 @@ def test_connection() -> bool:
         cur.execute("SELECT CURRENT_VERSION()")
         version = cur.fetchone()[0]
         
-        logger.info(f"✓ Snowflake connection test successful (Version: {version})")
+        logger.info(f"[OK] Snowflake connection test successful (Version: {version})")
         
         cur.close()
         conn.close()
