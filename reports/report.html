@@ -3,54 +3,112 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RICO Security Assessment Report</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <title>RICO Security Audit Report</title>
     <style>
-        
+        /* ============================================
+           RESET & BASE STYLES
+           ============================================ */
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
-        
+
         body {
             font-family: 'Inter', 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
             line-height: 1.6;
             color: #1a1a1a;
             background: #ffffff;
+            padding: 0;
+            margin: 0;
             transition: background-color 0.3s, color 0.3s;
         }
-        
+
+        /* ============================================
+           DARK MODE
+           ============================================ */
         body.dark-mode {
             background: #111111;
             color: #e5e5e5;
         }
-        
+
+        body.dark-mode .container {
+            background: #111111;
+            border-color: #333333;
+        }
+
+        body.dark-mode .header {
+            background: #1a1a1a;
+            border-color: #333333;
+        }
+
+        body.dark-mode table {
+            border-color: #333333;
+        }
+
+        body.dark-mode th {
+            background: #1a1a1a;
+            border-color: #333333;
+        }
+
+        body.dark-mode td {
+            border-color: #333333;
+        }
+
+        body.dark-mode tbody tr:nth-child(even) {
+            background: #0a0a0a;
+        }
+
+        body.dark-mode .section-separator {
+            border-color: #333333;
+        }
+
+        body.dark-mode .top-finding-box {
+            background: #1a1a1a;
+            border-color: #dc3545;
+        }
+
+        body.dark-mode .vuln-details {
+            background: #0a0a0a;
+            border-color: #333333;
+        }
+
+        body.dark-mode .code-block {
+            background: #0a0a0a;
+            border-color: #333333;
+        }
+
+        body.dark-mode .fix-box {
+            background: #1a1a1a;
+            border-color: #333333;
+        }
+
+        body.dark-mode .footer {
+            background: #1a1a1a;
+            border-color: #333333;
+        }
+
+        /* ============================================
+           LAYOUT CONTAINER
+           ============================================ */
         .container {
-            max-width: 210mm;
+            max-width: 210mm; /* A4 width */
             margin: 0 auto;
             background: #ffffff;
             border: 1px solid #e0e0e0;
             transition: background-color 0.3s, border-color 0.3s;
         }
-        
-        body.dark-mode .container {
-            background: #111111;
-            border-color: #333333;
-        }
-        
+
+        /* ============================================
+           HEADER
+           ============================================ */
         .header {
             background: #ffffff;
             border-bottom: 3px solid #000000;
             padding: 40px;
             position: relative;
         }
-        
-        body.dark-mode .header {
-            background: #1a1a1a;
-            border-color: #ffffff;
-        }
-        
+
         .header h1 {
             font-size: 28px;
             font-weight: 700;
@@ -59,22 +117,22 @@
             margin-bottom: 8px;
             color: #000000;
         }
-        
+
         body.dark-mode .header h1 {
             color: #ffffff;
         }
-        
+
         .header .subtitle {
             font-size: 14px;
             color: #666666;
             text-transform: uppercase;
             letter-spacing: 1px;
         }
-        
+
         body.dark-mode .header .subtitle {
             color: #999999;
         }
-        
+
         .theme-toggle {
             position: absolute;
             top: 20px;
@@ -90,62 +148,71 @@
             font-weight: 600;
             transition: all 0.3s;
         }
-        
+
         .theme-toggle:hover {
             background: #333333;
         }
-        
+
         body.dark-mode .theme-toggle {
             background: #ffffff;
             color: #000000;
             border-color: #ffffff;
         }
-        
+
         body.dark-mode .theme-toggle:hover {
             background: #e0e0e0;
         }
-        
+
+        /* ============================================
+           META INFO BAR
+           ============================================ */
         .meta-bar {
             background: #f5f5f5;
             padding: 20px 40px;
             border-bottom: 1px solid #e0e0e0;
             font-size: 13px;
         }
-        
+
         body.dark-mode .meta-bar {
             background: #1a1a1a;
             border-color: #333333;
         }
-        
+
         .meta-bar table {
             width: 100%;
             border-collapse: collapse;
         }
-        
+
         .meta-bar td {
             padding: 4px 0;
             border: none;
         }
-        
+
         .meta-bar td:first-child {
             font-weight: 600;
             width: 150px;
         }
-        
+
+        /* ============================================
+           SECTION SEPARATOR
+           ============================================ */
         .section-separator {
             border: none;
             border-top: 2px solid #000000;
             margin: 0;
         }
-        
+
         body.dark-mode .section-separator {
             border-color: #ffffff;
         }
-        
+
+        /* ============================================
+           CONTENT SECTIONS
+           ============================================ */
         .content {
             padding: 40px;
         }
-        
+
         .section-title {
             font-size: 18px;
             font-weight: 700;
@@ -155,15 +222,18 @@
             padding-bottom: 8px;
             border-bottom: 2px solid #000000;
         }
-        
+
         body.dark-mode .section-title {
             border-color: #ffffff;
         }
-        
+
         .section-title:first-child {
             margin-top: 0;
         }
-        
+
+        /* ============================================
+           TABLES - CORE STYLING
+           ============================================ */
         table {
             width: 100%;
             border-collapse: collapse;
@@ -171,11 +241,11 @@
             margin: 20px 0;
             font-size: 13px;
         }
-        
+
         body.dark-mode table {
             border-color: #ffffff;
         }
-        
+
         th {
             background: #f5f5f5;
             font-weight: 700;
@@ -186,106 +256,120 @@
             letter-spacing: 0.5px;
             font-size: 11px;
         }
-        
+
         body.dark-mode th {
             background: #1a1a1a;
             border-color: #ffffff;
         }
-        
+
         td {
             padding: 12px;
             border: 1px solid #000000;
             vertical-align: top;
         }
-        
+
         body.dark-mode td {
             border-color: #ffffff;
         }
-        
+
         tbody tr:nth-child(even) {
             background: #fafafa;
         }
-        
+
         body.dark-mode tbody tr:nth-child(even) {
             background: #0a0a0a;
         }
-        
+
+        /* ============================================
+           EXECUTIVE SUMMARY TABLE
+           ============================================ */
         .summary-table td:first-child {
             font-weight: 600;
             width: 200px;
         }
-        
+
         .summary-table td:last-child {
             font-weight: 700;
             font-size: 16px;
         }
-        
+
+        /* ============================================
+           TOP FINDING BOX
+           ============================================ */
+        .top-finding-box {
+            background: #ffffff;
+            border: 3px solid #dc3545;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        body.dark-mode .top-finding-box {
+            background: #1a1a1a;
+        }
+
+        .top-finding-box h3 {
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+            color: #dc3545;
+        }
+
+        .top-finding-box p {
+            font-size: 16px;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        /* ============================================
+           SEVERITY BADGES
+           ============================================ */
         .severity-critical {
             color: #dc3545;
             font-weight: 700;
         }
-        
+
         .severity-high {
             color: #fd7e14;
             font-weight: 700;
         }
-        
+
         .severity-medium {
             color: #ffc107;
             font-weight: 700;
         }
-        
+
         .severity-low {
             color: #17a2b8;
             font-weight: 700;
         }
-        
-        .risk-critical { color: #dc3545; }
-        .risk-high { color: #fd7e14; }
-        .risk-medium { color: #ffc107; }
-        .risk-low { color: #17a2b8; }
-        .risk-minimal { color: #28a745; }
-        
-        .charts-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-            gap: 30px;
-            margin: 20px 0;
-        }
-        
-        .chart-container {
-            position: relative;
-            height: 300px;
-            background: #fafafa;
-            padding: 20px;
-            border: 1px solid #000000;
-        }
-        
-        body.dark-mode .chart-container {
-            background: #0a0a0a;
-            border-color: #ffffff;
-        }
-        
-        .chart-container h3 {
-            font-size: 12px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 15px;
+
+        .status-pass {
+            color: #28a745;
             font-weight: 700;
         }
-        
+
+        .status-fail {
+            color: #dc3545;
+            font-weight: 700;
+        }
+
+        /* ============================================
+           VULNERABILITY DETAILS (EXPANDABLE)
+           ============================================ */
         .vuln-row {
             cursor: pointer;
         }
-        
+
         .vuln-row:hover {
             background: #f0f0f0 !important;
         }
-        
+
         body.dark-mode .vuln-row:hover {
             background: #222222 !important;
         }
-        
+
         .vuln-details {
             display: none;
             background: #fafafa;
@@ -293,24 +377,24 @@
             padding: 20px;
             margin: 10px 0;
         }
-        
+
         body.dark-mode .vuln-details {
             background: #0a0a0a;
             border-color: #333333;
         }
-        
+
         .vuln-details.active {
             display: block;
         }
-        
+
         .detail-section {
             margin-bottom: 20px;
         }
-        
+
         .detail-section:last-child {
             margin-bottom: 0;
         }
-        
+
         .detail-section h4 {
             font-size: 12px;
             text-transform: uppercase;
@@ -318,12 +402,12 @@
             margin-bottom: 8px;
             font-weight: 700;
         }
-        
+
         .detail-section p {
             font-size: 13px;
             line-height: 1.6;
         }
-        
+
         .code-block {
             background: #f5f5f5;
             border: 1px solid #e0e0e0;
@@ -334,12 +418,60 @@
             white-space: pre-wrap;
             word-wrap: break-word;
         }
-        
+
         body.dark-mode .code-block {
             background: #0a0a0a;
             border-color: #333333;
         }
-        
+
+        .fix-box {
+            background: #ffffff;
+            border: 1px solid #000000;
+            padding: 12px;
+            font-size: 13px;
+            line-height: 1.6;
+            white-space: pre-line;
+        }
+
+        body.dark-mode .fix-box {
+            background: #1a1a1a;
+            border-color: #ffffff;
+        }
+
+        /* ============================================
+           COLLAPSIBLE SAFE ENDPOINTS
+           ============================================ */
+        details {
+            margin: 20px 0;
+        }
+
+        summary {
+            font-weight: 700;
+            cursor: pointer;
+            padding: 12px;
+            background: #f5f5f5;
+            border: 1px solid #000000;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 12px;
+        }
+
+        body.dark-mode summary {
+            background: #1a1a1a;
+            border-color: #ffffff;
+        }
+
+        summary:hover {
+            background: #e0e0e0;
+        }
+
+        body.dark-mode summary:hover {
+            background: #222222;
+        }
+
+        /* ============================================
+           FOOTER
+           ============================================ */
         .footer {
             background: #f5f5f5;
             border-top: 3px solid #000000;
@@ -347,339 +479,797 @@
             text-align: center;
             font-size: 12px;
         }
-        
+
         body.dark-mode .footer {
             background: #1a1a1a;
             border-color: #ffffff;
         }
-        
+
         .footer p {
             margin: 5px 0;
         }
-        
-        .text-center {
-            text-align: center;
-        }
-        
-        .font-mono {
-            font-family: 'Courier New', monospace;
-        }
-        
-        .expand-icon {
-            float: right;
-            font-size: 10px;
-            transition: transform 0.3s;
-        }
-        
-        .expand-icon.active {
-            transform: rotate(180deg);
-        }
-        
+
+        /* ============================================
+           PRINT STYLES
+           ============================================ */
         @media print {
             @page {
                 size: A4;
                 margin: 20mm;
             }
-            
+
             body {
                 background: white;
                 color: black;
             }
-            
+
             .container {
                 border: none;
                 max-width: 100%;
             }
-            
+
             .theme-toggle {
                 display: none;
             }
-            
+
+            .no-print {
+                display: none;
+            }
+
+            table {
+                page-break-inside: avoid;
+            }
+
+            .vuln-details {
+                page-break-inside: avoid;
+            }
+
+            .section-title {
+                page-break-after: avoid;
+            }
+
+            .vuln-row {
+                cursor: default;
+            }
+
+            .vuln-row:hover {
+                background: inherit !important;
+            }
+
+            /* Expand all details for print */
             .vuln-details {
                 display: block !important;
             }
+
+            details {
+                page-break-inside: avoid;
+            }
+
+            summary {
+                cursor: default;
+            }
         }
-        
+
+        /* ============================================
+           UTILITY CLASSES
+           ============================================ */
+        .text-center {
+            text-align: center;
+        }
+
+        .text-right {
+            text-align: right;
+        }
+
+        .font-mono {
+            font-family: 'Courier New', monospace;
+        }
+
+        .expand-icon {
+            float: right;
+            font-size: 10px;
+            transition: transform 0.3s;
+        }
+
+        .expand-icon.active {
+            transform: rotate(180deg);
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        
+        <!-- HEADER -->
         <div class="header">
-            <button class="theme-toggle" onclick="toggleTheme()">Toggle Theme</button>
-            <h1>🛡️ RICO Security Assessment Report</h1>
+            <button class="theme-toggle no-print" onclick="toggleTheme()">Toggle Theme</button>
+            <h1>🛡️ RICO Security Audit Report</h1>
             <p class="subtitle">Enterprise API Security Assessment</p>
         </div>
-        
-        
+
+        <!-- META INFORMATION BAR -->
         <div class="meta-bar">
             <table>
                 <tr>
                     <td>Generated:</td>
-                    <td>2026-02-28 11:06:13</td>
+                    <td>2026-02-28 19:31:27</td>
                 </tr>
                 <tr>
                     <td>Target API:</td>
-                    <td>{'target_url': 'http://localhost:8000', 'scan_timestamp': '2026-02-28T11:06:13.721626'}</td>
+                    <td>http://localhost:8000</td>
                 </tr>
                 <tr>
-                    <td>Scan Date:</td>
-                    <td>2026-02-28T11:06:13.721686</td>
-                </tr>
-                <tr>
-                    <td>Total Vulnerabilities:</td>
-                    <td>5</td>
+                    <td>Total Tests:</td>
+                    <td>45</td>
                 </tr>
             </table>
         </div>
-        
+
         <hr class="section-separator">
+
+        <!-- MAIN CONTENT -->
         <div class="content">
-            
-        <h2 class="section-title">Section 1: Executive Summary</h2>
-        <table class="summary-table">
-            <thead>
-                <tr>
-                    <th>Metric</th>
-                    <th>Value</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>Risk Score</td>
-                    <td class="risk-medium">30.2 / 100</td>
-                </tr>
-                <tr>
-                    <td>Risk Level</td>
-                    <td class="risk-medium">MEDIUM</td>
-                </tr>
-                <tr>
-                    <td>Total Vulnerabilities</td>
-                    <td>5</td>
-                </tr>
-                <tr>
-                    <td>Critical Vulnerabilities</td>
-                    <td class="severity-critical">2</td>
-                </tr>
-                <tr>
-                    <td>High Vulnerabilities</td>
-                    <td class="severity-high">1</td>
-                </tr>
-                <tr>
-                    <td>Medium Vulnerabilities</td>
-                    <td class="severity-medium">2</td>
-                </tr>
-            </tbody>
-        </table>
-        <p style="margin-top: 20px; font-size: 14px; line-height: 1.8;">This scan identified 5 vulnerabilities including 2 critical issues. The most significant risks relate to IDOR (2 instances), SQL Injection (1 instance). Remediation should be prioritized based on endpoint exposure and data sensitivity.</p>
-        
-            
-        <h2 class="section-title">Section 2: Risk Analysis</h2>
-        <div class="charts-grid">
-            <div class="chart-container">
-                <h3>Severity Distribution</h3>
-                <canvas id="severityChart"></canvas>
+            <!-- SECTION 1: EXECUTIVE SUMMARY -->
+            <h2 class="section-title">Section 1: Executive Summary</h2>
+            <table class="summary-table">
+                <thead>
+                    <tr>
+                        <th>Metric</th>
+                        <th>Value</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Security Score</td>
+                        <td>76 / 100</td>
+                    </tr>
+                    <tr>
+                        <td>Risk Level</td>
+                        <td class="severity-medium">MEDIUM</td>
+                    </tr>
+                    <tr>
+                        <td>Critical Vulnerabilities</td>
+                        <td class="">0</td>
+                    </tr>
+                    <tr>
+                        <td>High Vulnerabilities</td>
+                        <td class="">0</td>
+                    </tr>
+                    <tr>
+                        <td>Medium Vulnerabilities</td>
+                        <td class="severity-medium">4</td>
+                    </tr>
+                    <tr>
+                        <td>Safe Endpoints</td>
+                        <td class="status-pass">41</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <!-- SECTION 2: TOP FINDING -->
+            <h2 class="section-title">Section 2: Top Finding</h2>
+            <div class="top-finding-box">
+                <h3>⚠️ Priority Issue</h3>
+                <p>IDOR in /users/{user_id}</p>
             </div>
-            <div class="chart-container">
-                <h3>OWASP API Top 10 Coverage</h3>
-                <canvas id="owaspChart"></canvas>
-            </div>
-        </div>
-        
+
+            <!-- SECTION 3: VULNERABILITIES -->
             
-        <h2 class="section-title">Section 3: Identified Vulnerabilities</h2>
-        <table>
-            <thead>
-                <tr>
-                    <th style="width: 40%;">Endpoint</th>
-                    <th style="width: 15%;">Type</th>
-                    <th style="width: 15%;">Severity</th>
-                    <th style="width: 10%;">Confidence</th>
-                    <th style="width: 10%;" class="text-center">Details</th>
-                </tr>
-            </thead>
-            <tbody>
-                
-                <tr class="vuln-row" onclick="toggleDetails(1)">
-                    <td class="font-mono">GET /users/search</td>
-                    <td>SQL Injection</td>
-                    <td class="severity-critical">Critical</td>
-                    <td class="text-center">95%</td>
-                    <td class="text-center">
-                        <span class="expand-icon" id="icon-1">▼</span>
-                    </td>
-                </tr>
-                <tr>
-                    <td colspan="5" style="padding: 0; border: none;">
-                        <div class="vuln-details" id="details-1">
-                            <div class="detail-section">
-                                <h4>📋 Description</h4>
-                                <p>SQL injection vulnerability detected in search parameter. Attacker can execute arbitrary SQL queries.</p>
+            <h2 class="section-title">Section 3: Identified Vulnerabilities</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 40%;">Endpoint</th>
+                        <th style="width: 15%;">Type</th>
+                        <th style="width: 15%;">Severity</th>
+                        <th style="width: 10%;">CVSS</th>
+                        <th style="width: 10%;">Confidence</th>
+                        <th style="width: 10%;" class="text-center">Details</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    
+                    <tr class="vuln-row" onclick="toggleDetails(1)">
+                        <td class="font-mono">/users/{user_id}</td>
+                        <td>IDOR</td>
+                        <td class="severity-medium">Medium</td>
+                        <td class="text-center">8.0</td>
+                        <td class="text-center">75%</td>
+                        <td class="text-center">
+                            <span class="expand-icon" id="icon-1">▼</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="6" style="padding: 0; border: none;">
+                            <div class="vuln-details" id="details-1">
+                                <div class="detail-section">
+                                    <h4>📋 Description</h4>
+                                    <p>Different resources accessible without authorization; Response content differs: 36.4% value differences</p>
+                                </div>
+
+                                <div class="detail-section">
+                                    <h4>⚠️ Risk Explanation</h4>
+                                    <p>This vulnerability has been classified as <strong class="severity-medium">Medium</strong> severity with a CVSS score of <strong>8.0</strong>. The confidence level of this detection is <strong>75%</strong>.</p>
+                                </div>
+
+                                <div class="detail-section">
+                                    <h4>🔬 Proof of Concept</h4>
+                                    <div class="code-block">curl -X GET &#34;http://localhost:8000/users/{user_id}&#34; \
+  -H &#34;Content-Type: application/json&#34;</div>
+                                </div>
+
+                                <div class="detail-section">
+                                    <h4>🔧 Recommended Fix</h4>
+                                    <div class="fix-box">Implement proper authorization checks:
+1. Verify the authenticated user owns the requested resource
+2. Use indirect object references (e.g., UUIDs instead of sequential IDs)
+3. Implement access control lists (ACLs)
+4. Log all access attempts for audit trails</div>
+                                </div>
                             </div>
-                            <div class="detail-section"><h4>📋 Compliance Mapping</h4><p><strong>CWE:</strong> CWE-89 | <strong>OWASP:</strong> API8:2023 | (Security Misconfiguration)</p></div>
-                            <div class="detail-section"><h4>🔬 Proof of Concept</h4><div class="code-block">curl -X GET &#39;http://localhost:8000/users/search?q=&#39; OR 1=1--&#39;</div></div>
-                        </div>
-                    </td>
-                </tr>
-        
-                <tr class="vuln-row" onclick="toggleDetails(2)">
-                    <td class="font-mono">GET /users/{user_id}/orders</td>
-                    <td>IDOR</td>
-                    <td class="severity-high">High</td>
-                    <td class="text-center">85%</td>
-                    <td class="text-center">
-                        <span class="expand-icon" id="icon-2">▼</span>
-                    </td>
-                </tr>
-                <tr>
-                    <td colspan="5" style="padding: 0; border: none;">
-                        <div class="vuln-details" id="details-2">
-                            <div class="detail-section">
-                                <h4>📋 Description</h4>
-                                <p>Insecure Direct Object Reference allows accessing other users' orders by manipulating the user_id parameter.</p>
+                        </td>
+                    </tr>
+                    
+                    <tr class="vuln-row" onclick="toggleDetails(2)">
+                        <td class="font-mono">/users/{user_id}/orders</td>
+                        <td>IDOR</td>
+                        <td class="severity-medium">Medium</td>
+                        <td class="text-center">8.0</td>
+                        <td class="text-center">75%</td>
+                        <td class="text-center">
+                            <span class="expand-icon" id="icon-2">▼</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="6" style="padding: 0; border: none;">
+                            <div class="vuln-details" id="details-2">
+                                <div class="detail-section">
+                                    <h4>📋 Description</h4>
+                                    <p>Different resources accessible without authorization; Response content differs: 1 structural changes; 35.7% value differences</p>
+                                </div>
+
+                                <div class="detail-section">
+                                    <h4>⚠️ Risk Explanation</h4>
+                                    <p>This vulnerability has been classified as <strong class="severity-medium">Medium</strong> severity with a CVSS score of <strong>8.0</strong>. The confidence level of this detection is <strong>75%</strong>.</p>
+                                </div>
+
+                                <div class="detail-section">
+                                    <h4>🔬 Proof of Concept</h4>
+                                    <div class="code-block">curl -X GET &#34;http://localhost:8000/users/{user_id}/orders&#34; \
+  -H &#34;Content-Type: application/json&#34;</div>
+                                </div>
+
+                                <div class="detail-section">
+                                    <h4>🔧 Recommended Fix</h4>
+                                    <div class="fix-box">Implement proper authorization checks:
+1. Verify the authenticated user owns the requested resource
+2. Use indirect object references (e.g., UUIDs instead of sequential IDs)
+3. Implement access control lists (ACLs)
+4. Log all access attempts for audit trails</div>
+                                </div>
                             </div>
-                            <div class="detail-section"><h4>📋 Compliance Mapping</h4><p><strong>CWE:</strong> CWE-639 | <strong>OWASP:</strong> API1:2023 | (Broken Object Level Authorization)</p></div>
-                            <div class="detail-section"><h4>🔬 Proof of Concept</h4><div class="code-block">curl -X GET &#39;http://localhost:8000/users/999/orders&#39;</div></div>
-                        </div>
-                    </td>
-                </tr>
-        
-                <tr class="vuln-row" onclick="toggleDetails(3)">
-                    <td class="font-mono">GET /admin/users</td>
-                    <td>Missing Authentication</td>
-                    <td class="severity-critical">Critical</td>
-                    <td class="text-center">90%</td>
-                    <td class="text-center">
-                        <span class="expand-icon" id="icon-3">▼</span>
-                    </td>
-                </tr>
-                <tr>
-                    <td colspan="5" style="padding: 0; border: none;">
-                        <div class="vuln-details" id="details-3">
-                            <div class="detail-section">
-                                <h4>📋 Description</h4>
-                                <p>Admin endpoint accessible without authentication. Exposes sensitive user data.</p>
+                        </td>
+                    </tr>
+                    
+                    <tr class="vuln-row" onclick="toggleDetails(3)">
+                        <td class="font-mono">/sqli/search/secure</td>
+                        <td>Missing Auth</td>
+                        <td class="severity-medium">Medium</td>
+                        <td class="text-center">7.5</td>
+                        <td class="text-center">70%</td>
+                        <td class="text-center">
+                            <span class="expand-icon" id="icon-3">▼</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="6" style="padding: 0; border: none;">
+                            <div class="vuln-details" id="details-3">
+                                <div class="detail-section">
+                                    <h4>📋 Description</h4>
+                                    <p>Sensitive endpoint accessible without authentication (Status: 200). Contains sensitive data or path parameters.</p>
+                                </div>
+
+                                <div class="detail-section">
+                                    <h4>⚠️ Risk Explanation</h4>
+                                    <p>This vulnerability has been classified as <strong class="severity-medium">Medium</strong> severity with a CVSS score of <strong>7.5</strong>. The confidence level of this detection is <strong>70%</strong>.</p>
+                                </div>
+
+                                <div class="detail-section">
+                                    <h4>🔬 Proof of Concept</h4>
+                                    <div class="code-block">curl -X GET &#34;http://localhost:8000/sqli/search/secure&#34; \
+  -H &#34;Content-Type: application/json&#34;</div>
+                                </div>
+
+                                <div class="detail-section">
+                                    <h4>🔧 Recommended Fix</h4>
+                                    <div class="fix-box">Add authentication middleware:
+1. Require valid authentication tokens for all protected endpoints
+2. Implement JWT or session-based authentication
+3. Return 401 Unauthorized for unauthenticated requests
+4. Use role-based access control (RBAC) for different user levels</div>
+                                </div>
                             </div>
-                            <div class="detail-section"><h4>📋 Compliance Mapping</h4><p><strong>CWE:</strong> CWE-306 | <strong>OWASP:</strong> API2:2023 | (Broken Authentication)</p></div>
-                            <div class="detail-section"><h4>🔬 Proof of Concept</h4><div class="code-block">curl -X GET &#39;http://localhost:8000/admin/users&#39;</div></div>
-                        </div>
-                    </td>
-                </tr>
-        
-                <tr class="vuln-row" onclick="toggleDetails(4)">
-                    <td class="font-mono">GET /users/{user_id}</td>
-                    <td>IDOR</td>
-                    <td class="severity-medium">Medium</td>
-                    <td class="text-center">75%</td>
-                    <td class="text-center">
-                        <span class="expand-icon" id="icon-4">▼</span>
-                    </td>
-                </tr>
-                <tr>
-                    <td colspan="5" style="padding: 0; border: none;">
-                        <div class="vuln-details" id="details-4">
-                            <div class="detail-section">
-                                <h4>📋 Description</h4>
-                                <p>User profile endpoint allows accessing other users' information.</p>
+                        </td>
+                    </tr>
+                    
+                    <tr class="vuln-row" onclick="toggleDetails(4)">
+                        <td class="font-mono">/admin/promote/{user_id}/vulnerable</td>
+                        <td>IDOR</td>
+                        <td class="severity-medium">Medium</td>
+                        <td class="text-center">8.0</td>
+                        <td class="text-center">75%</td>
+                        <td class="text-center">
+                            <span class="expand-icon" id="icon-4">▼</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="6" style="padding: 0; border: none;">
+                            <div class="vuln-details" id="details-4">
+                                <div class="detail-section">
+                                    <h4>📋 Description</h4>
+                                    <p>Different resources accessible without authorization; Response content differs: 40.0% value differences</p>
+                                </div>
+
+                                <div class="detail-section">
+                                    <h4>⚠️ Risk Explanation</h4>
+                                    <p>This vulnerability has been classified as <strong class="severity-medium">Medium</strong> severity with a CVSS score of <strong>8.0</strong>. The confidence level of this detection is <strong>75%</strong>.</p>
+                                </div>
+
+                                <div class="detail-section">
+                                    <h4>🔬 Proof of Concept</h4>
+                                    <div class="code-block">curl -X GET &#34;http://localhost:8000/admin/promote/{user_id}/vulnerable&#34; \
+  -H &#34;Content-Type: application/json&#34;</div>
+                                </div>
+
+                                <div class="detail-section">
+                                    <h4>🔧 Recommended Fix</h4>
+                                    <div class="fix-box">Implement proper authorization checks:
+1. Verify the authenticated user owns the requested resource
+2. Use indirect object references (e.g., UUIDs instead of sequential IDs)
+3. Implement access control lists (ACLs)
+4. Log all access attempts for audit trails</div>
+                                </div>
                             </div>
-                            <div class="detail-section"><h4>📋 Compliance Mapping</h4><p><strong>CWE:</strong> CWE-639 | <strong>OWASP:</strong> API1:2023 | (Broken Object Level Authorization)</p></div>
-                            <div class="detail-section"><h4>🔬 Proof of Concept</h4><div class="code-block">curl -X GET &#39;http://localhost:8000/users/123&#39;</div></div>
-                        </div>
-                    </td>
-                </tr>
-        
-                <tr class="vuln-row" onclick="toggleDetails(5)">
-                    <td class="font-mono">POST /users/update</td>
-                    <td>CSRF</td>
-                    <td class="severity-medium">Medium</td>
-                    <td class="text-center">70%</td>
-                    <td class="text-center">
-                        <span class="expand-icon" id="icon-5">▼</span>
-                    </td>
-                </tr>
-                <tr>
-                    <td colspan="5" style="padding: 0; border: none;">
-                        <div class="vuln-details" id="details-5">
-                            <div class="detail-section">
-                                <h4>📋 Description</h4>
-                                <p>Missing CSRF protection on user update endpoint.</p>
-                            </div>
-                            <div class="detail-section"><h4>📋 Compliance Mapping</h4><p><strong>CWE:</strong> CWE-352 | <strong>OWASP:</strong> API2:2023 | (Broken Authentication)</p></div>
-                            <div class="detail-section"><h4>🔬 Proof of Concept</h4><div class="code-block">curl -X POST &#39;http://localhost:8000/users/update&#39; -d &#39;email=attacker@evil.com&#39;</div></div>
-                        </div>
-                    </td>
-                </tr>
-        
-            </tbody>
-        </table>
-        
+                        </td>
+                    </tr>
+                    
+                </tbody>
+            </table>
             
-        <h2 class="section-title">Section 4: Recommendations</h2>
-        <table>
-            <thead>
-                <tr>
-                    <th style="width: 5%;">#</th>
-                    <th>Recommendation</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td class="text-center">1</td>
-                    <td>Prioritize Critical and High severity vulnerabilities for immediate remediation</td>
-                </tr>
-                <tr>
-                    <td class="text-center">2</td>
-                    <td>Implement input validation and parameterized queries to prevent injection attacks</td>
-                </tr>
-                <tr>
-                    <td class="text-center">3</td>
-                    <td>Enforce proper authorization checks on all resource endpoints (IDOR prevention)</td>
-                </tr>
-                <tr>
-                    <td class="text-center">4</td>
-                    <td>Implement security testing in CI/CD pipeline using RICO automated scans</td>
-                </tr>
-                <tr>
-                    <td class="text-center">5</td>
-                    <td>Conduct regular security audits following OWASP API Security Top 10 guidelines</td>
-                </tr>
-                <tr>
-                    <td class="text-center">6</td>
-                    <td>Enable comprehensive logging and monitoring for security events</td>
-                </tr>
-            </tbody>
-        </table>
-        
+
+            <!-- SECTION 4: SAFE ENDPOINTS -->
+            
+            <h2 class="section-title">Section 4: Safe Endpoints</h2>
+            <details>
+                <summary>▶ View Safe Endpoints (41 endpoints passed all tests)</summary>
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 50%;">Endpoint</th>
+                            <th style="width: 15%;">IDOR</th>
+                            <th style="width: 20%;">Missing Auth</th>
+                            <th style="width: 15%;">SQLi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        
+                        
+                            
+                                
+                            
+                            
+                        
+                            
+                                
+                            
+                            
+                        
+                            
+                                
+                            
+                            
+                        
+                            
+                            
+                        
+                            
+                                
+                            
+                            
+                        
+                            
+                                
+                            
+                            
+                        
+                            
+                            
+                        
+                            
+                            
+                        
+                            
+                                
+                            
+                            
+                        
+                            
+                                
+                            
+                            
+                        
+                            
+                            
+                        
+                            
+                                
+                            
+                            
+                        
+                            
+                                
+                            
+                            
+                        
+                            
+                            
+                        
+                            
+                                
+                            
+                            
+                        
+                            
+                            
+                        
+                            
+                                
+                            
+                            
+                        
+                            
+                            
+                        
+                            
+                            
+                        
+                            
+                                
+                            
+                            
+                        
+                            
+                                
+                            
+                            
+                        
+                            
+                                
+                            
+                            
+                        
+                            
+                                
+                            
+                            
+                        
+                            
+                                
+                            
+                            
+                        
+                            
+                            
+                        
+                            
+                                
+                            
+                            
+                        
+                            
+                                
+                            
+                            
+                        
+                            
+                            
+                        
+                            
+                            
+                        
+                            
+                                
+                            
+                            
+                        
+                            
+                            
+                        
+                            
+                                
+                            
+                            
+                        
+                            
+                            
+                        
+                            
+                                
+                            
+                            
+                        
+                            
+                            
+                        
+                            
+                            
+                        
+                            
+                                
+                            
+                            
+                        
+                            
+                            
+                        
+                            
+                            
+                        
+                            
+                                
+                            
+                            
+                        
+                            
+                            
+                        
+                        
+                        
+                        <tr>
+                            <td class="font-mono">/</td>
+                            <td class="">-</td>
+                            <td class="">-</td>
+                            <td class="">-</td>
+                        </tr>
+                        
+                        <tr>
+                            <td class="font-mono">/health</td>
+                            <td class="">-</td>
+                            <td class="">-</td>
+                            <td class="">-</td>
+                        </tr>
+                        
+                        <tr>
+                            <td class="font-mono">/auth/login</td>
+                            <td class="">-</td>
+                            <td class="">-</td>
+                            <td class="status-pass">PASS</td>
+                        </tr>
+                        
+                        <tr>
+                            <td class="font-mono">/users/{user_id}</td>
+                            <td class="">-</td>
+                            <td class="">-</td>
+                            <td class="">-</td>
+                        </tr>
+                        
+                        <tr>
+                            <td class="font-mono">/users/{user_id}/secure</td>
+                            <td class="status-pass">PASS</td>
+                            <td class="">-</td>
+                            <td class="status-pass">PASS</td>
+                        </tr>
+                        
+                        <tr>
+                            <td class="font-mono">/users/{user_id}/orders</td>
+                            <td class="">-</td>
+                            <td class="">-</td>
+                            <td class="">-</td>
+                        </tr>
+                        
+                        <tr>
+                            <td class="font-mono">/users/{user_id}/orders/secure</td>
+                            <td class="status-pass">PASS</td>
+                            <td class="">-</td>
+                            <td class="">-</td>
+                        </tr>
+                        
+                        <tr>
+                            <td class="font-mono">/sqli/search</td>
+                            <td class="">-</td>
+                            <td class="">-</td>
+                            <td class="status-pass">PASS</td>
+                        </tr>
+                        
+                        <tr>
+                            <td class="font-mono">/sqli/search/secure</td>
+                            <td class="status-pass">PASS</td>
+                            <td class="">-</td>
+                            <td class="status-pass">PASS</td>
+                        </tr>
+                        
+                        <tr>
+                            <td class="font-mono">/sqli/login</td>
+                            <td class="">-</td>
+                            <td class="">-</td>
+                            <td class="status-pass">PASS</td>
+                        </tr>
+                        
+                        <tr>
+                            <td class="font-mono">/sqli/product</td>
+                            <td class="status-pass">PASS</td>
+                            <td class="">-</td>
+                            <td class="status-pass">PASS</td>
+                        </tr>
+                        
+                        <tr>
+                            <td class="font-mono">/ssrf/fetch</td>
+                            <td class="">-</td>
+                            <td class="">-</td>
+                            <td class="">-</td>
+                        </tr>
+                        
+                        <tr>
+                            <td class="font-mono">/ssrf/fetch/secure</td>
+                            <td class="">-</td>
+                            <td class="">-</td>
+                            <td class="">-</td>
+                        </tr>
+                        
+                        <tr>
+                            <td class="font-mono">/files/read</td>
+                            <td class="">-</td>
+                            <td class="">-</td>
+                            <td class="">-</td>
+                        </tr>
+                        
+                        <tr>
+                            <td class="font-mono">/files/read/secure</td>
+                            <td class="">-</td>
+                            <td class="">-</td>
+                            <td class="">-</td>
+                        </tr>
+                        
+                        <tr>
+                            <td class="font-mono">/cmd/ping</td>
+                            <td class="">-</td>
+                            <td class="">-</td>
+                            <td class="status-pass">PASS</td>
+                        </tr>
+                        
+                        <tr>
+                            <td class="font-mono">/cmd/ping/secure</td>
+                            <td class="">-</td>
+                            <td class="">-</td>
+                            <td class="">-</td>
+                        </tr>
+                        
+                        <tr>
+                            <td class="font-mono">/business/transfer/vulnerable</td>
+                            <td class="status-pass">PASS</td>
+                            <td class="">-</td>
+                            <td class="status-pass">PASS</td>
+                        </tr>
+                        
+                        <tr>
+                            <td class="font-mono">/business/transfer/secure</td>
+                            <td class="">-</td>
+                            <td class="">-</td>
+                            <td class="status-pass">PASS</td>
+                        </tr>
+                        
+                        <tr>
+                            <td class="font-mono">/business/orders/vulnerable</td>
+                            <td class="">-</td>
+                            <td class="">-</td>
+                            <td class="status-pass">PASS</td>
+                        </tr>
+                        
+                        <tr>
+                            <td class="font-mono">/admin/users/vulnerable</td>
+                            <td class="status-pass">PASS</td>
+                            <td class="">-</td>
+                            <td class="status-pass">PASS</td>
+                        </tr>
+                        
+                        <tr>
+                            <td class="font-mono">/admin/users/secure</td>
+                            <td class="status-pass">PASS</td>
+                            <td class="">-</td>
+                            <td class="status-pass">PASS</td>
+                        </tr>
+                        
+                        <tr>
+                            <td class="font-mono">/admin/promote/{user_id}/vulnerable</td>
+                            <td class="">-</td>
+                            <td class="">-</td>
+                            <td class="status-pass">PASS</td>
+                        </tr>
+                        
+                    </tbody>
+                </table>
+            </details>
+            
+
+            <!-- SECTION 5: RECOMMENDATIONS -->
+            <h2 class="section-title">Section 5: Recommendations</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 5%;">#</th>
+                        <th>Recommendation</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="text-center">1</td>
+                        <td>Prioritize Critical and High severity vulnerabilities for immediate remediation</td>
+                    </tr>
+                    <tr>
+                        <td class="text-center">2</td>
+                        <td>Implement input validation and parameterized queries to prevent SQL injection</td>
+                    </tr>
+                    <tr>
+                        <td class="text-center">3</td>
+                        <td>Enforce proper authorization checks on all resource endpoints (IDOR prevention)</td>
+                    </tr>
+                    <tr>
+                        <td class="text-center">4</td>
+                        <td>Implement security testing in CI/CD pipeline using RICO automated scans</td>
+                    </tr>
+                    <tr>
+                        <td class="text-center">5</td>
+                        <td>Conduct regular security audits following OWASP API Security Top 10 guidelines</td>
+                    </tr>
+                    <tr>
+                        <td class="text-center">6</td>
+                        <td>Enable comprehensive logging and monitoring for security events</td>
+                    </tr>
+                    <tr>
+                        <td class="text-center">7</td>
+                        <td>Implement rate limiting and request throttling to prevent abuse</td>
+                    </tr>
+                    <tr>
+                        <td class="text-center">8</td>
+                        <td>Review and update authentication mechanisms across all endpoints</td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
+
         <hr class="section-separator">
-        
+
+        <!-- FOOTER -->
         <div class="footer">
             <p><strong>RICO Security Testing Framework</strong></p>
             <p>AI-Powered API Security Assessment Tool</p>
-            <p style="margin-top: 10px;">Report Generated: 2026-02-28 11:06:13 UTC</p>
+            <p style="margin-top: 10px;">Report Generated: 2026-02-28 19:31:27</p>
             <p style="margin-top: 5px; font-size: 10px;">This report is confidential and intended for authorized personnel only.</p>
         </div>
-        
     </div>
+
     <script>
-        
-        // Theme Toggle
+        // ============================================
+        // THEME TOGGLE
+        // ============================================
         function toggleTheme() {
             const body = document.body;
             body.classList.toggle('dark-mode');
+            
+            // Persist theme preference
             const isDark = body.classList.contains('dark-mode');
             localStorage.setItem('theme', isDark ? 'dark' : 'light');
         }
-        
-        // Load saved theme
+
+        // Load saved theme on page load
         document.addEventListener('DOMContentLoaded', function() {
             const savedTheme = localStorage.getItem('theme');
             if (savedTheme === 'dark') {
                 document.body.classList.add('dark-mode');
             }
         });
-        
-        // Toggle vulnerability details
+
+        // ============================================
+        // VULNERABILITY DETAILS TOGGLE
+        // ============================================
         function toggleDetails(index) {
             const details = document.getElementById('details-' + index);
             const icon = document.getElementById('icon-' + index);
@@ -692,72 +1282,6 @@
                 icon.classList.add('active');
             }
         }
-        
-        // Severity Chart
-        const severityCtx = document.getElementById('severityChart').getContext('2d');
-        new Chart(severityCtx, {
-            type: 'doughnut',
-            data: {
-                labels: ['Critical', 'High', 'Medium', 'Low', 'Info'],
-                datasets: [{
-                    data: [
-                        2,
-                        1,
-                        2,
-                        0,
-                        0
-                    ],
-                    backgroundColor: [
-                        '#dc3545',
-                        '#fd7e14',
-                        '#ffc107',
-                        '#17a2b8',
-                        '#28a745'
-                    ]
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'bottom'
-                    }
-                }
-            }
-        });
-        
-        // OWASP Chart
-        const owaspCtx = document.getElementById('owaspChart').getContext('2d');
-        new Chart(owaspCtx, {
-            type: 'bar',
-            data: {
-                labels: ["API8:2023", "API1:2023", "API2:2023"],
-                datasets: [{
-                    label: 'Vulnerabilities',
-                    data: [1, 2, 2],
-                    backgroundColor: '#000000'
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: false
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: {
-                            stepSize: 1
-                        }
-                    }
-                }
-            }
-        });
-        
     </script>
 </body>
 </html>
