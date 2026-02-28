@@ -1,0 +1,127 @@
+{
+  "priority_matrix": [
+    {
+      "rank": 1,
+      "endpoint": "/users/{user_id}",
+      "attack_type": "IDOR",
+      "severity": "Medium",
+      "exploitability": "medium",
+      "business_impact": "high",
+      "rationale": "Different resources accessible without authorization, high confidence level"
+    },
+    {
+      "rank": 2,
+      "endpoint": "/users/{user_id}/orders",
+      "attack_type": "IDOR",
+      "severity": "Medium",
+      "exploitability": "medium",
+      "business_impact": "high",
+      "rationale": "Different resources accessible without authorization, high confidence level"
+    },
+    {
+      "rank": 3,
+      "endpoint": "/sqli/search",
+      "attack_type": "Missing Auth",
+      "severity": "Medium",
+      "exploitability": "medium",
+      "business_impact": "medium",
+      "rationale": "Sensitive endpoint accessible without authentication"
+    },
+    {
+      "rank": 4,
+      "endpoint": "/sqli/search/secure",
+      "attack_type": "Missing Auth",
+      "severity": "Medium",
+      "exploitability": "medium",
+      "business_impact": "medium",
+      "rationale": "Sensitive endpoint accessible without authentication"
+    },
+    {
+      "rank": 5,
+      "endpoint": "/admin/promote/{user_id}/vulnerable",
+      "attack_type": "IDOR",
+      "severity": "Medium",
+      "exploitability": "medium",
+      "business_impact": "high",
+      "rationale": "Different resources accessible without authorization, high confidence level"
+    }
+  ],
+  "exploit_chains": [
+    {
+      "chain_id": 1,
+      "name": "IDOR Chain",
+      "steps": [
+        "Exploit /users/{user_id}",
+        "Exploit /users/{user_id}/orders",
+        "Exploit /admin/promote/{user_id}/vulnerable"
+      ],
+      "vulnerabilities_used": [
+        "/users/{user_id}",
+        "/users/{user_id}/orders",
+        "/admin/promote/{user_id}/vulnerable"
+      ],
+      "impact": "High",
+      "likelihood": "medium"
+    },
+    {
+      "chain_id": 2,
+      "name": "Missing Auth Chain",
+      "steps": [
+        "Exploit /sqli/search",
+        "Exploit /sqli/search/secure"
+      ],
+      "vulnerabilities_used": [
+        "/sqli/search",
+        "/sqli/search/secure"
+      ],
+      "impact": "Medium",
+      "likelihood": "medium"
+    }
+  ],
+  "business_risk": {
+    "data_exposure": "Potential exposure of user data",
+    "compliance_impact": "Potential non-compliance with data protection regulations",
+    "reputation_risk": "Potential damage to company reputation",
+    "financial_impact": "Potential financial loss due to data breaches or non-compliance",
+    "overall_risk_level": "MEDIUM"
+  },
+  "remediation_plan": [
+    {
+      "priority": "medium",
+      "action": "Implement authentication and authorization for /users/{user_id} and /users/{user_id}/orders",
+      "endpoints_affected": [
+        "/users/{user_id}",
+        "/users/{user_id}/orders"
+      ],
+      "estimated_effort": "Medium",
+      "dependencies": [
+        "Authentication and authorization framework"
+      ]
+    },
+    {
+      "priority": "medium",
+      "action": "Implement authentication and authorization for /sqli/search and /sqli/search/secure",
+      "endpoints_affected": [
+        "/sqli/search",
+        "/sqli/search/secure"
+      ],
+      "estimated_effort": "Medium",
+      "dependencies": [
+        "Authentication and authorization framework"
+      ]
+    },
+    {
+      "priority": "medium",
+      "action": "Implement IDOR protection for /admin/promote/{user_id}/vulnerable",
+      "endpoints_affected": [
+        "/admin/promote/{user_id}/vulnerable"
+      ],
+      "estimated_effort": "Medium",
+      "dependencies": [
+        "IDOR protection framework"
+      ]
+    }
+  ],
+  "executive_summary": "The company's API has a medium risk level, with potential exposure of user data and non-compliance with data protection regulations. Implementing authentication, authorization, and IDOR protection is crucial to mitigate these risks.",
+  "technical_summary": "The API scan results reveal multiple vulnerabilities, including IDOR and missing authentication. Exploit chains can be formed using these vulnerabilities, potentially leading to high impact. Implementing authentication, authorization, and IDOR protection is necessary to mitigate these risks and ensure the security of the API."
+}

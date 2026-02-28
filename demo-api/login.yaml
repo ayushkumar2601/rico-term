@@ -1,0 +1,29 @@
+# RICO Login Configuration Example
+# This file configures automated browser login for testing authenticated APIs
+
+# URL of the login page
+login_url: "http://localhost:3000/login"
+
+# Credentials
+username: "test@test.com"
+password: "123456"
+
+# CSS Selectors for form fields
+# Use browser DevTools to find the correct selectors
+username_selector: "#email"
+password_selector: "#password"
+submit_selector: "button[type='submit']"
+
+# Where the auth token is stored after login
+# Options: cookie, localStorage, header
+token_storage: "localStorage"
+
+# Optional: Specific token/cookie names to extract
+# token_name: "authToken"
+# cookie_name: "session"
+
+# Optional: URL to test session validity
+# test_url: "http://localhost:3000/dashboard"
+
+# Optional: Expected redirect after login
+# success_url: "http://localhost:3000/dashboard"

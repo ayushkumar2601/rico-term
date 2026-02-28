@@ -1,0 +1,2 @@
+This is a public file that should be accessible.
+Content: Public information for all users.

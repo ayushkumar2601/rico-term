@@ -1,0 +1,585 @@
+openapi: 3.0.0
+info:
+  title: RICO Security Testing Playground
+  description: |
+    Intentionally vulnerable API for testing RICO's security scanning capabilities.
+    
+    ⚠️ WARNING: This API contains intentional security vulnerabilities.
+    DO NOT deploy this in production environments.
+    
+    ## Vulnerability Categories
+    - SQL Injection (error-based, boolean-blind, time-based)
+    - IDOR (Insecure Direct Object Reference)
+    - Missing Authentication
+    - SSRF (Server-Side Request Forgery)
+    - Path Traversal
+    - Command Injection
+    - JWT Tampering (signature bypass, alg=none)
+    - Business Logic Flaws (negative transfers, role injection)
+    
+    ## Testing Credentials
+    - Regular User: alice / password123
+    - Regular User: bob / password456
+    - Admin User: admin / admin123
+  version: 1.0.0
+  contact:
+    name: RICO Security
+    url: https://github.com/yourusername/rico
+
+servers:
+  - url: http://localhost:8000
+    description: Local development server
+
+tags:
+  - name: Health
+    description: Health check and status endpoints
+  - name: Authentication
+    description: Login and JWT token management
+  - name: Users
+    description: User management endpoints (IDOR testing)
+  - name: SQL Injection Tests
+    description: Endpoints for testing SQL injection detection
+  - name: SSRF Tests
+    description: Endpoints for testing SSRF detection
+  - name: Path Traversal Tests
+    description: Endpoints for testing path traversal detection
+  - name: Command Injection Tests
+    description: Endpoints for testing command injection detection
+  - name: Business Logic
+    description: Business logic flaw testing
+  - name: Admin
+    description: Admin endpoints (JWT tampering testing)
+
+paths:
+  /:
+    get:
+      tags: [Health]
+      summary: Root endpoint
+      description: API information and documentation links
+      responses:
+        '200':
+          description: API information
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  version:
+                    type: string
+                  warning:
+                    type: string
+                  documentation:
+                    type: string
+
+  /health:
+    get:
+      tags: [Health]
+      summary: Health check
+      description: Check if API is running
+      responses:
+        '200':
+          description: API is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  timestamp:
+                    type: string
+
+  /auth/login:
+    post:
+      tags: [Authentication]
+      summary: User login
+      description: Authenticate user and receive JWT token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - username
+                - password
+              properties:
+                username:
+                  type: string
+                  example: alice
+                password:
+                  type: string
+                  example: password123
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  access_token:
+                    type: string
+                  token_type:
+                    type: string
+                  user:
+                    type: object
+        '401':
+          description: Invalid credentials
+
+  /users/{user_id}:
+    get:
+      tags: [Users]
+      summary: Get user by ID (VULNERABLE - IDOR)
+      description: |
+        🔴 VULNERABLE: No authorization check - any user can access any user's data.
+        Test IDOR by accessing other users' IDs.
+        
+        Examples:
+        - GET /users/1 → alice's data
+        - GET /users/2 → bob's data
+        - GET /users/3 → admin's data
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 1
+      responses:
+        '200':
+          description: User data
+        '404':
+          description: User not found
+
+  /users/{user_id}/secure:
+    get:
+      tags: [Users]
+      summary: Get user by ID (SECURE)
+      description: |
+        🟢 SECURE: Proper authorization - users can only access their own data.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: User data
+        '403':
+          description: Forbidden
+        '404':
+          description: User not found
+
+  /users/{user_id}/orders:
+    get:
+      tags: [Users]
+      summary: Get user orders (VULNERABLE - IDOR)
+      description: |
+        🔴 VULNERABLE: No authorization - access any user's orders.
+        
+        Examples:
+        - GET /users/1/orders → alice's orders
+        - GET /users/2/orders → bob's orders
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: User orders
+
+  /users/{user_id}/orders/secure:
+    get:
+      tags: [Users]
+      summary: Get user orders (SECURE)
+      description: |
+        🟢 SECURE: Proper authorization - users can only access their own orders.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: User orders
+        '403':
+          description: Forbidden
+
+  /sqli/search:
+    get:
+      tags: [SQL Injection Tests]
+      summary: Search users (VULNERABLE - Error-based & Boolean-blind SQLi)
+      description: |
+        🔴 VULNERABLE: Direct SQL injection in search parameter.
+        
+        Supports multiple SQLi detection methods:
+        - Error-based: Returns SQL errors
+        - Boolean-blind: Different responses for TRUE/FALSE
+        - Response inference: Content changes based on query
+        
+        Test payloads:
+        - `name=alice` (normal search)
+        - `name=alice' OR '1'='1` (TRUE - returns all users)
+        - `name=alice' AND '1'='2` (FALSE - returns empty)
+        - `name=alice' AND 1=1--` (TRUE condition)
+        - `name=alice' AND 1=2--` (FALSE condition)
+        - `name=' UNION SELECT * FROM users--` (SQL error)
+      parameters:
+        - name: name
+          in: query
+          required: true
+          schema:
+            type: string
+          example: alice
+      responses:
+        '200':
+          description: Search results
+        '500':
+          description: SQL error (injection detected)
+
+  /sqli/search/secure:
+    get:
+      tags: [SQL Injection Tests]
+      summary: Search users (SECURE - Parameterized)
+      description: |
+        🟢 SECURE: Uses parameterized queries and input validation.
+      parameters:
+        - name: name
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Search results
+
+  /sqli/login:
+    post:
+      tags: [SQL Injection Tests]
+      summary: Login (VULNERABLE - Boolean-blind SQLi)
+      description: |
+        🔴 VULNERABLE: Boolean-based blind SQL injection.
+        
+        Test payloads:
+        - username: `admin' AND 1=1--` (TRUE condition)
+        - username: `admin' AND 1=2--` (FALSE condition)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+      responses:
+        '200':
+          description: Login result
+
+  /sqli/product:
+    get:
+      tags: [SQL Injection Tests]
+      summary: Get product (VULNERABLE - Time-based SQLi)
+      description: |
+        🔴 VULNERABLE: Time-based blind SQL injection.
+        
+        Test payload:
+        - `1' AND SLEEP(5)--` (causes 5-second delay)
+      parameters:
+        - name: id
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Product data
+
+  /ssrf/fetch:
+    post:
+      tags: [SSRF Tests]
+      summary: Fetch URL (VULNERABLE - SSRF)
+      description: |
+        🔴 VULNERABLE: Server-Side Request Forgery.
+        
+        Test payloads:
+        - `http://localhost:8000/internal/metadata` (access internal endpoint)
+        - `http://169.254.169.254/latest/meta-data/` (cloud metadata)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                url:
+                  type: string
+                  example: http://example.com
+      responses:
+        '200':
+          description: Fetched content
+
+  /ssrf/fetch/secure:
+    post:
+      tags: [SSRF Tests]
+      summary: Fetch URL (SECURE - Validated)
+      description: |
+        🟢 SECURE: URL validation and whitelist.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                url:
+                  type: string
+      responses:
+        '200':
+          description: Fetched content
+        '400':
+          description: Invalid URL
+
+  /files/read:
+    get:
+      tags: [Path Traversal Tests]
+      summary: Read file (VULNERABLE - Path Traversal)
+      description: |
+        🔴 VULNERABLE: Path traversal attack.
+        
+        Test payloads:
+        - `../../../etc/passwd`
+        - `../../data/secret.txt`
+      parameters:
+        - name: filename
+          in: query
+          required: true
+          schema:
+            type: string
+          example: public.txt
+      responses:
+        '200':
+          description: File content
+
+  /files/read/secure:
+    get:
+      tags: [Path Traversal Tests]
+      summary: Read file (SECURE - Validated)
+      description: |
+        🟢 SECURE: Path validation and sanitization.
+      parameters:
+        - name: filename
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: File content
+        '400':
+          description: Invalid filename
+
+  /cmd/ping:
+    post:
+      tags: [Command Injection Tests]
+      summary: Ping host (VULNERABLE - Command Injection)
+      description: |
+        🔴 VULNERABLE: Command injection via host parameter.
+        
+        Test payloads:
+        - `8.8.8.8; cat /etc/passwd`
+        - `8.8.8.8 && whoami`
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                host:
+                  type: string
+                  example: 8.8.8.8
+      responses:
+        '200':
+          description: Ping result
+
+  /cmd/ping/secure:
+    post:
+      tags: [Command Injection Tests]
+      summary: Ping host (SECURE - Validated)
+      description: |
+        🟢 SECURE: Input validation and sanitization.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                host:
+                  type: string
+      responses:
+        '200':
+          description: Ping result
+        '400':
+          description: Invalid host
+
+  /business/transfer/vulnerable:
+    post:
+      tags: [Business Logic]
+      summary: Money transfer (VULNERABLE - Business Logic Flaw)
+      description: |
+        🔴 VULNERABLE: Multiple business logic flaws.
+        
+        Vulnerabilities:
+        - Allows negative amounts (money creation)
+        - No ownership verification
+        - No balance check
+        
+        Test: Transfer -100 to create money!
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                from_account:
+                  type: integer
+                to_account:
+                  type: integer
+                amount:
+                  type: number
+      responses:
+        '200':
+          description: Transfer successful
+
+  /business/transfer/secure:
+    post:
+      tags: [Business Logic]
+      summary: Money transfer (SECURE)
+      description: |
+        🟢 SECURE: Proper validation and authorization.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                from_account:
+                  type: integer
+                to_account:
+                  type: integer
+                amount:
+                  type: number
+      responses:
+        '200':
+          description: Transfer successful
+        '400':
+          description: Invalid request
+        '403':
+          description: Forbidden
+
+  /business/orders/vulnerable:
+    post:
+      tags: [Business Logic]
+      summary: Create order (VULNERABLE - Role Injection)
+      description: |
+        🔴 VULNERABLE: Trusts user-provided role in nested JSON.
+        
+        Test payload:
+        ```json
+        {
+          "user": {"id": 1, "role": "admin"},
+          "items": [{"product_id": 101, "quantity": 2}]
+        }
+        ```
+        User can set their own role to get admin discount!
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Order created
+
+  /admin/users/vulnerable:
+    get:
+      tags: [Admin]
+      summary: List users (VULNERABLE - JWT Tampering)
+      description: |
+        🔴 VULNERABLE: JWT signature not validated.
+        
+        JWT Tampering test:
+        1. Login as regular user
+        2. Modify JWT: change "role": "user" to "role": "admin"
+        3. Use modified token (signature not checked!)
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: User list
+        '401':
+          description: Unauthorized
+
+  /admin/users/secure:
+    get:
+      tags: [Admin]
+      summary: List users (SECURE)
+      description: |
+        🟢 SECURE: Proper JWT validation and role check.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: User list
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+
+  /admin/promote/{user_id}/vulnerable:
+    post:
+      tags: [Admin]
+      summary: Promote user (VULNERABLE - No Auth)
+      description: |
+        🔴 VULNERABLE: No authentication required!
+        
+        JWT alg=none bypass test:
+        1. Create JWT with alg=none
+        2. No signature required
+        3. Access endpoint
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: User promoted
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

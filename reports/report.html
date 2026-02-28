@@ -1,0 +1,943 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RICO Security Report</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f5f7fa;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .header .subtitle {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .meta-info {
+            background: #f8f9fa;
+            padding: 20px 40px;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .meta-info p {
+            margin: 5px 0;
+            color: #666;
+        }
+
+        .summary-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            padding: 40px;
+            background: #f8f9fa;
+        }
+
+        .card {
+            background: white;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            text-align: center;
+            border-left: 4px solid #667eea;
+        }
+
+        .card.score {
+            border-left-color: #667eea;
+        }
+
+        .card.critical {
+            border-left-color: #dc3545;
+        }
+
+        .card.high {
+            border-left-color: #fd7e14;
+        }
+
+        .card.medium {
+            border-left-color: #ffc107;
+        }
+
+        .card.safe {
+            border-left-color: #28a745;
+        }
+
+        .card-value {
+            font-size: 2.5em;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .card-label {
+            color: #666;
+            font-size: 0.9em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            margin: 30px 0 20px 0;
+            color: #2c3e50;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .vulnerability-item {
+            background: white;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            overflow: hidden;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .vuln-header {
+            padding: 20px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .vuln-header:hover {
+            background: #e9ecef;
+        }
+
+        .vuln-title {
+            font-size: 1.3em;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .vuln-badges {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+
+        .badge.critical {
+            background: #dc3545;
+            color: white;
+        }
+
+        .badge.high {
+            background: #fd7e14;
+            color: white;
+        }
+
+        .badge.medium {
+            background: #ffc107;
+            color: #333;
+        }
+
+        .badge.low {
+            background: #17a2b8;
+            color: white;
+        }
+
+        .badge.info {
+            background: #6c757d;
+            color: white;
+        }
+
+        .vuln-body {
+            padding: 20px;
+            display: none;
+        }
+
+        .vuln-body.active {
+            display: block;
+        }
+
+        .vuln-section {
+            margin-bottom: 20px;
+        }
+
+        .vuln-section h4 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+
+        .vuln-section p {
+            color: #555;
+            line-height: 1.8;
+        }
+
+        .code-block {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            line-height: 1.5;
+        }
+
+        .fix-suggestion {
+            background: #e7f3ff;
+            border-left: 4px solid #2196F3;
+            padding: 15px;
+            border-radius: 4px;
+            white-space: pre-line;
+        }
+
+        .safe-list {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+        }
+
+        .safe-list ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .safe-list li {
+            padding: 10px;
+            margin: 5px 0;
+            background: white;
+            border-radius: 4px;
+            border-left: 3px solid #28a745;
+        }
+
+        .footer {
+            background: #2c3e50;
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .recommendations {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .recommendations h3 {
+            color: #856404;
+            margin-bottom: 15px;
+        }
+
+        .recommendations ul {
+            color: #856404;
+            padding-left: 20px;
+        }
+
+        .recommendations li {
+            margin: 8px 0;
+        }
+
+        .toggle-icon {
+            font-size: 1.2em;
+            transition: transform 0.3s;
+        }
+
+        .toggle-icon.active {
+            transform: rotate(180deg);
+        }
+
+        .top-issue-banner {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .top-issue-banner h3 {
+            margin-bottom: 10px;
+            font-size: 1.3em;
+        }
+
+        .top-issue-banner p {
+            font-size: 1.1em;
+            margin: 0;
+        }
+
+        .cvss-badge {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+            margin-left: 5px;
+        }
+
+        .cvss-critical {
+            background: #dc3545;
+            color: white;
+        }
+
+        .cvss-high {
+            background: #fd7e14;
+            color: white;
+        }
+
+        .cvss-medium {
+            background: #ffc107;
+            color: #333;
+        }
+
+        .cvss-low {
+            background: #17a2b8;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🛡️ RICO Security Report</h1>
+            <p class="subtitle">AI-Powered API Security Testing</p>
+        </div>
+
+        <div class="meta-info">
+            <p><strong>Generated:</strong> 2026-02-28 10:02:34</p>
+            <p><strong>Target API:</strong> http://localhost:8000</p>
+            <p><strong>Total Tests:</strong> 69</p>
+        </div>
+
+        <div class="summary-cards">
+            <div class="card score">
+                <div class="card-label">Security Score</div>
+                <div class="card-value">70/100</div>
+            </div>
+            <div class="card medium">
+                <div class="card-label">Risk Level</div>
+                <div class="card-value">MEDIUM</div>
+            </div>
+            <div class="card critical">
+                <div class="card-label">Critical</div>
+                <div class="card-value">0</div>
+            </div>
+            <div class="card high">
+                <div class="card-label">High</div>
+                <div class="card-value">0</div>
+            </div>
+            <div class="card medium">
+                <div class="card-label">Medium</div>
+                <div class="card-value">5</div>
+            </div>
+            <div class="card safe">
+                <div class="card-label">Safe</div>
+                <div class="card-value">64</div>
+            </div>
+        </div>
+
+        <div class="content">
+            <div class="top-issue-banner">
+                <h3>🎯 Top Issue</h3>
+                <p>IDOR in /users/{user_id}</p>
+            </div>
+            
+            <h2 class="section-title">🔴 Vulnerabilities Detected</h2>
+
+            
+            <div class="vulnerability-item">
+                <div class="vuln-header" onclick="toggleVuln(1)">
+                    <div>
+                        <div class="vuln-title">/users/{user_id}</div>
+                        <div class="vuln-badges">
+                            <span class="badge medium">Medium</span>
+                            <span class="badge info">IDOR</span>
+                            <span class="badge info">75% Confidence</span>
+                            
+                            <span class="cvss-badge cvss-critical">CVSS: 8.0</span>
+                            
+                        </div>
+                    </div>
+                    <span class="toggle-icon" id="icon-1">▼</span>
+                </div>
+                <div class="vuln-body" id="vuln-1">
+                    <div class="vuln-section">
+                        <h4>📋 Description</h4>
+                        <p>Different resources accessible without authorization; Response content differs: 36.4% value differences</p>
+                    </div>
+
+                    <div class="vuln-section">
+                        <h4>🔬 Proof of Concept</h4>
+                        <div class="code-block">curl -X GET &#34;http://localhost:8000/users/{user_id}&#34; \
+  -H &#34;Content-Type: application/json&#34;</div>
+                    </div>
+
+                    <div class="vuln-section">
+                        <h4>🔧 Fix Suggestion</h4>
+                        <div class="fix-suggestion">Implement proper authorization checks:
+1. Verify the authenticated user owns the requested resource
+2. Use indirect object references (e.g., UUIDs instead of sequential IDs)
+3. Implement access control lists (ACLs)
+4. Log all access attempts for audit trails</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="vulnerability-item">
+                <div class="vuln-header" onclick="toggleVuln(2)">
+                    <div>
+                        <div class="vuln-title">/users/{user_id}/orders</div>
+                        <div class="vuln-badges">
+                            <span class="badge medium">Medium</span>
+                            <span class="badge info">IDOR</span>
+                            <span class="badge info">75% Confidence</span>
+                            
+                            <span class="cvss-badge cvss-critical">CVSS: 8.0</span>
+                            
+                        </div>
+                    </div>
+                    <span class="toggle-icon" id="icon-2">▼</span>
+                </div>
+                <div class="vuln-body" id="vuln-2">
+                    <div class="vuln-section">
+                        <h4>📋 Description</h4>
+                        <p>Different resources accessible without authorization; Response content differs: 1 structural changes; 35.7% value differences</p>
+                    </div>
+
+                    <div class="vuln-section">
+                        <h4>🔬 Proof of Concept</h4>
+                        <div class="code-block">curl -X GET &#34;http://localhost:8000/users/{user_id}/orders&#34; \
+  -H &#34;Content-Type: application/json&#34;</div>
+                    </div>
+
+                    <div class="vuln-section">
+                        <h4>🔧 Fix Suggestion</h4>
+                        <div class="fix-suggestion">Implement proper authorization checks:
+1. Verify the authenticated user owns the requested resource
+2. Use indirect object references (e.g., UUIDs instead of sequential IDs)
+3. Implement access control lists (ACLs)
+4. Log all access attempts for audit trails</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="vulnerability-item">
+                <div class="vuln-header" onclick="toggleVuln(3)">
+                    <div>
+                        <div class="vuln-title">/sqli/search</div>
+                        <div class="vuln-badges">
+                            <span class="badge medium">Medium</span>
+                            <span class="badge info">Missing Auth</span>
+                            <span class="badge info">70% Confidence</span>
+                            
+                            <span class="cvss-badge cvss-high">CVSS: 7.5</span>
+                            
+                        </div>
+                    </div>
+                    <span class="toggle-icon" id="icon-3">▼</span>
+                </div>
+                <div class="vuln-body" id="vuln-3">
+                    <div class="vuln-section">
+                        <h4>📋 Description</h4>
+                        <p>Sensitive endpoint accessible without authentication (Status: 200). Contains sensitive data or path parameters.</p>
+                    </div>
+
+                    <div class="vuln-section">
+                        <h4>🔬 Proof of Concept</h4>
+                        <div class="code-block">curl -X GET &#34;http://localhost:8000/sqli/search&#34; \
+  -H &#34;Content-Type: application/json&#34;</div>
+                    </div>
+
+                    <div class="vuln-section">
+                        <h4>🔧 Fix Suggestion</h4>
+                        <div class="fix-suggestion">Add authentication middleware:
+1. Require valid authentication tokens for all protected endpoints
+2. Implement JWT or session-based authentication
+3. Return 401 Unauthorized for unauthenticated requests
+4. Use role-based access control (RBAC) for different user levels</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="vulnerability-item">
+                <div class="vuln-header" onclick="toggleVuln(4)">
+                    <div>
+                        <div class="vuln-title">/sqli/search/secure</div>
+                        <div class="vuln-badges">
+                            <span class="badge medium">Medium</span>
+                            <span class="badge info">Missing Auth</span>
+                            <span class="badge info">70% Confidence</span>
+                            
+                            <span class="cvss-badge cvss-high">CVSS: 7.5</span>
+                            
+                        </div>
+                    </div>
+                    <span class="toggle-icon" id="icon-4">▼</span>
+                </div>
+                <div class="vuln-body" id="vuln-4">
+                    <div class="vuln-section">
+                        <h4>📋 Description</h4>
+                        <p>Sensitive endpoint accessible without authentication (Status: 200). Contains sensitive data or path parameters.</p>
+                    </div>
+
+                    <div class="vuln-section">
+                        <h4>🔬 Proof of Concept</h4>
+                        <div class="code-block">curl -X GET &#34;http://localhost:8000/sqli/search/secure&#34; \
+  -H &#34;Content-Type: application/json&#34;</div>
+                    </div>
+
+                    <div class="vuln-section">
+                        <h4>🔧 Fix Suggestion</h4>
+                        <div class="fix-suggestion">Add authentication middleware:
+1. Require valid authentication tokens for all protected endpoints
+2. Implement JWT or session-based authentication
+3. Return 401 Unauthorized for unauthenticated requests
+4. Use role-based access control (RBAC) for different user levels</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="vulnerability-item">
+                <div class="vuln-header" onclick="toggleVuln(5)">
+                    <div>
+                        <div class="vuln-title">/admin/promote/{user_id}/vulnerable</div>
+                        <div class="vuln-badges">
+                            <span class="badge medium">Medium</span>
+                            <span class="badge info">IDOR</span>
+                            <span class="badge info">75% Confidence</span>
+                            
+                            <span class="cvss-badge cvss-critical">CVSS: 8.0</span>
+                            
+                        </div>
+                    </div>
+                    <span class="toggle-icon" id="icon-5">▼</span>
+                </div>
+                <div class="vuln-body" id="vuln-5">
+                    <div class="vuln-section">
+                        <h4>📋 Description</h4>
+                        <p>Different resources accessible without authorization; Response content differs: 40.0% value differences</p>
+                    </div>
+
+                    <div class="vuln-section">
+                        <h4>🔬 Proof of Concept</h4>
+                        <div class="code-block">curl -X GET &#34;http://localhost:8000/admin/promote/{user_id}/vulnerable&#34; \
+  -H &#34;Content-Type: application/json&#34;</div>
+                    </div>
+
+                    <div class="vuln-section">
+                        <h4>🔧 Fix Suggestion</h4>
+                        <div class="fix-suggestion">Implement proper authorization checks:
+1. Verify the authenticated user owns the requested resource
+2. Use indirect object references (e.g., UUIDs instead of sequential IDs)
+3. Implement access control lists (ACLs)
+4. Log all access attempts for audit trails</div>
+                    </div>
+                </div>
+            </div>
+            
+            
+
+            
+            <h2 class="section-title">✅ Safe Endpoints</h2>
+            <div class="safe-list">
+                <ul>
+                    
+                    <li>
+                        <strong>/</strong> - IDOR
+                        <span style="color: #28a745; float: right;">✓ Passed</span>
+                    </li>
+                    
+                    <li>
+                        <strong>/</strong> - Missing Auth
+                        <span style="color: #28a745; float: right;">✓ Passed</span>
+                    </li>
+                    
+                    <li>
+                        <strong>/</strong> - SQL Injection
+                        <span style="color: #28a745; float: right;">✓ Passed</span>
+                    </li>
+                    
+                    <li>
+                        <strong>/health</strong> - IDOR
+                        <span style="color: #28a745; float: right;">✓ Passed</span>
+                    </li>
+                    
+                    <li>
+                        <strong>/health</strong> - Missing Auth
+                        <span style="color: #28a745; float: right;">✓ Passed</span>
+                    </li>
+                    
+                    <li>
+                        <strong>/health</strong> - SQL Injection
+                        <span style="color: #28a745; float: right;">✓ Passed</span>
+                    </li>
+                    
+                    <li>
+                        <strong>/auth/login</strong> - IDOR
+                        <span style="color: #28a745; float: right;">✓ Passed</span>
+                    </li>
+                    
+                    <li>
+                        <strong>/auth/login</strong> - Missing Auth
+                        <span style="color: #28a745; float: right;">✓ Passed</span>
+                    </li>
+                    
+                    <li>
+                        <strong>/auth/login</strong> - SQL Injection
+                        <span style="color: #28a745; float: right;">✓ Passed</span>
+                    </li>
+                    
+                    <li>
+                        <strong>/users/{user_id}</strong> - Missing Auth
+                        <span style="color: #28a745; float: right;">✓ Passed</span>
+                    </li>
+                    
+                    <li>
+                        <strong>/users/{user_id}</strong> - SQL Injection
+                        <span style="color: #28a745; float: right;">✓ Passed</span>
+                    </li>
+                    
+                    <li>
+                        <strong>/users/{user_id}/secure</strong> - IDOR
+                        <span style="color: #28a745; float: right;">✓ Passed</span>
+                    </li>
+                    
+                    <li>
+                        <strong>/users/{user_id}/secure</strong> - Missing Auth
+                        <span style="color: #28a745; float: right;">✓ Passed</span>
+                    </li>
+                    
+                    <li>
+                        <strong>/users/{user_id}/secure</strong> - SQL Injection
+                        <span style="color: #28a745; float: right;">✓ Passed</span>
+                    </li>
+                    
+                    <li>
+                        <strong>/users/{user_id}/orders</strong> - Missing Auth
+                        <span style="color: #28a745; float: right;">✓ Passed</span>
+                    </li>
+                    
+                    <li>
+                        <strong>/users/{user_id}/orders</strong> - SQL Injection
+                        <span style="color: #28a745; float: right;">✓ Passed</span>
+                    </li>
+                    
+                    <li>
+                        <strong>/users/{user_id}/orders/secure</strong> - IDOR
+                        <span style="color: #28a745; float: right;">✓ Passed</span>
+                    </li>
+                    
+                    <li>
+                        <strong>/users/{user_id}/orders/secure</strong> - Missing Auth
+                        <span style="color: #28a745; float: right;">✓ Passed</span>
+                    </li>
+                    
+                    <li>
+                        <strong>/users/{user_id}/orders/secure</strong> - SQL Injection
+                        <span style="color: #28a745; float: right;">✓ Passed</span>
+                    </li>
+                    
+                    <li>
+                        <strong>/sqli/search</strong> - IDOR
+                        <span style="color: #28a745; float: right;">✓ Passed</span>
+                    </li>
+                    
+                    <li>
+                        <strong>/sqli/search</strong> - SQL Injection
+                        <span style="color: #28a745; float: right;">✓ Passed</span>
+                    </li>
+                    
+                    <li>
+                        <strong>/sqli/search/secure</strong> - IDOR
+                        <span style="color: #28a745; float: right;">✓ Passed</span>
+                    </li>
+                    
+                    <li>
+                        <strong>/sqli/search/secure</strong> - SQL Injection
+                        <span style="color: #28a745; float: right;">✓ Passed</span>
+                    </li>
+                    
+                    <li>
+                        <strong>/sqli/login</strong> - IDOR
+                        <span style="color: #28a745; float: right;">✓ Passed</span>
+                    </li>
+                    
+                    <li>
+                        <strong>/sqli/login</strong> - Missing Auth
+                        <span style="color: #28a745; float: right;">✓ Passed</span>
+                    </li>
+                    
+                    <li>
+                        <strong>/sqli/login</strong> - SQL Injection
+                        <span style="color: #28a745; float: right;">✓ Passed</span>
+                    </li>
+                    
+                    <li>
+                        <strong>/sqli/product</strong> - IDOR
+                        <span style="color: #28a745; float: right;">✓ Passed</span>
+                    </li>
+                    
+                    <li>
+                        <strong>/sqli/product</strong> - Missing Auth
+                        <span style="color: #28a745; float: right;">✓ Passed</span>
+                    </li>
+                    
+                    <li>
+                        <strong>/sqli/product</strong> - SQL Injection
+                        <span style="color: #28a745; float: right;">✓ Passed</span>
+                    </li>
+                    
+                    <li>
+                        <strong>/ssrf/fetch</strong> - IDOR
+                        <span style="color: #28a745; float: right;">✓ Passed</span>
+                    </li>
+                    
+                    <li>
+                        <strong>/ssrf/fetch</strong> - Missing Auth
+                        <span style="color: #28a745; float: right;">✓ Passed</span>
+                    </li>
+                    
+                    <li>
+                        <strong>/ssrf/fetch</strong> - SQL Injection
+                        <span style="color: #28a745; float: right;">✓ Passed</span>
+                    </li>
+                    
+                    <li>
+                        <strong>/ssrf/fetch/secure</strong> - IDOR
+                        <span style="color: #28a745; float: right;">✓ Passed</span>
+                    </li>
+                    
+                    <li>
+                        <strong>/ssrf/fetch/secure</strong> - Missing Auth
+                        <span style="color: #28a745; float: right;">✓ Passed</span>
+                    </li>
+                    
+                    <li>
+                        <strong>/ssrf/fetch/secure</strong> - SQL Injection
+                        <span style="color: #28a745; float: right;">✓ Passed</span>
+                    </li>
+                    
+                    <li>
+                        <strong>/files/read</strong> - IDOR
+                        <span style="color: #28a745; float: right;">✓ Passed</span>
+                    </li>
+                    
+                    <li>
+                        <strong>/files/read</strong> - Missing Auth
+                        <span style="color: #28a745; float: right;">✓ Passed</span>
+                    </li>
+                    
+                    <li>
+                        <strong>/files/read</strong> - SQL Injection
+                        <span style="color: #28a745; float: right;">✓ Passed</span>
+                    </li>
+                    
+                    <li>
+                        <strong>/files/read/secure</strong> - IDOR
+                        <span style="color: #28a745; float: right;">✓ Passed</span>
+                    </li>
+                    
+                    <li>
+                        <strong>/files/read/secure</strong> - Missing Auth
+                        <span style="color: #28a745; float: right;">✓ Passed</span>
+                    </li>
+                    
+                    <li>
+                        <strong>/files/read/secure</strong> - SQL Injection
+                        <span style="color: #28a745; float: right;">✓ Passed</span>
+                    </li>
+                    
+                    <li>
+                        <strong>/cmd/ping</strong> - IDOR
+                        <span style="color: #28a745; float: right;">✓ Passed</span>
+                    </li>
+                    
+                    <li>
+                        <strong>/cmd/ping</strong> - Missing Auth
+                        <span style="color: #28a745; float: right;">✓ Passed</span>
+                    </li>
+                    
+                    <li>
+                        <strong>/cmd/ping</strong> - SQL Injection
+                        <span style="color: #28a745; float: right;">✓ Passed</span>
+                    </li>
+                    
+                    <li>
+                        <strong>/cmd/ping/secure</strong> - IDOR
+                        <span style="color: #28a745; float: right;">✓ Passed</span>
+                    </li>
+                    
+                    <li>
+                        <strong>/cmd/ping/secure</strong> - Missing Auth
+                        <span style="color: #28a745; float: right;">✓ Passed</span>
+                    </li>
+                    
+                    <li>
+                        <strong>/cmd/ping/secure</strong> - SQL Injection
+                        <span style="color: #28a745; float: right;">✓ Passed</span>
+                    </li>
+                    
+                    <li>
+                        <strong>/business/transfer/vulnerable</strong> - IDOR
+                        <span style="color: #28a745; float: right;">✓ Passed</span>
+                    </li>
+                    
+                    <li>
+                        <strong>/business/transfer/vulnerable</strong> - Missing Auth
+                        <span style="color: #28a745; float: right;">✓ Passed</span>
+                    </li>
+                    
+                    <li>
+                        <strong>/business/transfer/vulnerable</strong> - SQL Injection
+                        <span style="color: #28a745; float: right;">✓ Passed</span>
+                    </li>
+                    
+                    <li>
+                        <strong>/business/transfer/secure</strong> - IDOR
+                        <span style="color: #28a745; float: right;">✓ Passed</span>
+                    </li>
+                    
+                    <li>
+                        <strong>/business/transfer/secure</strong> - Missing Auth
+                        <span style="color: #28a745; float: right;">✓ Passed</span>
+                    </li>
+                    
+                    <li>
+                        <strong>/business/transfer/secure</strong> - SQL Injection
+                        <span style="color: #28a745; float: right;">✓ Passed</span>
+                    </li>
+                    
+                    <li>
+                        <strong>/business/orders/vulnerable</strong> - IDOR
+                        <span style="color: #28a745; float: right;">✓ Passed</span>
+                    </li>
+                    
+                    <li>
+                        <strong>/business/orders/vulnerable</strong> - Missing Auth
+                        <span style="color: #28a745; float: right;">✓ Passed</span>
+                    </li>
+                    
+                    <li>
+                        <strong>/business/orders/vulnerable</strong> - SQL Injection
+                        <span style="color: #28a745; float: right;">✓ Passed</span>
+                    </li>
+                    
+                    <li>
+                        <strong>/admin/users/vulnerable</strong> - IDOR
+                        <span style="color: #28a745; float: right;">✓ Passed</span>
+                    </li>
+                    
+                    <li>
+                        <strong>/admin/users/vulnerable</strong> - Missing Auth
+                        <span style="color: #28a745; float: right;">✓ Passed</span>
+                    </li>
+                    
+                    <li>
+                        <strong>/admin/users/vulnerable</strong> - SQL Injection
+                        <span style="color: #28a745; float: right;">✓ Passed</span>
+                    </li>
+                    
+                    <li>
+                        <strong>/admin/users/secure</strong> - IDOR
+                        <span style="color: #28a745; float: right;">✓ Passed</span>
+                    </li>
+                    
+                    <li>
+                        <strong>/admin/users/secure</strong> - Missing Auth
+                        <span style="color: #28a745; float: right;">✓ Passed</span>
+                    </li>
+                    
+                    <li>
+                        <strong>/admin/users/secure</strong> - SQL Injection
+                        <span style="color: #28a745; float: right;">✓ Passed</span>
+                    </li>
+                    
+                    <li>
+                        <strong>/admin/promote/{user_id}/vulnerable</strong> - Missing Auth
+                        <span style="color: #28a745; float: right;">✓ Passed</span>
+                    </li>
+                    
+                    <li>
+                        <strong>/admin/promote/{user_id}/vulnerable</strong> - SQL Injection
+                        <span style="color: #28a745; float: right;">✓ Passed</span>
+                    </li>
+                    
+                </ul>
+            </div>
+            
+
+            <div class="recommendations">
+                <h3>💡 Recommendations</h3>
+                <ul>
+                    <li>Prioritize Critical and High severity vulnerabilities for immediate remediation</li>
+                    <li>Implement security testing in your CI/CD pipeline</li>
+                    <li>Conduct regular security audits of your API endpoints</li>
+                    <li>Follow OWASP API Security Top 10 guidelines</li>
+                    <li>Enable logging and monitoring for security events</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>Report generated by <strong>RICO</strong> - AI-Powered API Security Testing</p>
+            <p style="margin-top: 10px; opacity: 0.8;">2026-02-28 10:02:34</p>
+        </div>
+    </div>
+
+    <script>
+        function toggleVuln(index) {
+            const body = document.getElementById('vuln-' + index);
+            const icon = document.getElementById('icon-' + index);
+            
+            if (body.classList.contains('active')) {
+                body.classList.remove('active');
+                icon.classList.remove('active');
+            } else {
+                body.classList.add('active');
+                icon.classList.add('active');
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "rico-sec"
+version = "0.1.0"
+dependencies = [
+    "typer",
+    "httpx",
+    "prance",
+    "rich",
+    "jinja2",
+    "pydantic",
+    "openapi-spec-validator"
+]
+
+[project.scripts]
+rico = "rico.cli:main"
+
+[tool.setuptools]
+packages = ["rico", "rico.brain", "rico.executor", "rico.attacks", "rico.reporter"]
