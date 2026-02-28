@@ -1,4 +1,45 @@
-<!DOCTYPE html>
+"""
+HTML Exporter - Generates unified minimalist HTML security reports
+
+Combines:
+- Minimalist black/white UI design with dark mode
+- Interactive Chart.js visualizations
+- Executive summary and risk metrics
+- Expandable vulnerability details
+"""
+
+from datetime import datetime
+from typing import Dict, List, Any
+from pathlib import Path
+import json
+
+
+class HTMLExporter:
+    """Exports security reports in unified minimalist HTML format."""
+    
+    def __init__(self, vulnerabilities: List[Dict[str, Any]], metadata: Dict[str, Any]):
+        """
+        Initialize HTML exporter.
+        
+        Args:
+            vulnerabilities: List of enriched vulnerabilities
+            metadata: Scan metadata
+        """
+        self.vulnerabilities = vulnerabilities
+        self.metadata = metadata
+    
+    def generate(self, summary_stats: Dict[str, Any], executive_summary: str) -> str:
+        """
+        Generate complete unified HTML report.
+        
+        Args:
+            summary_stats: Summary statistics
+            executive_summary: Executive summary text
+            
+        Returns:
+            HTML string
+        """
+        return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -6,7 +47,32 @@
     <title>RICO Security Assessment Report</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
-        
+        {self._get_css()}
+    </style>
+</head>
+<body>
+    <div class="container">
+        {self._generate_header()}
+        {self._generate_meta_bar(summary_stats)}
+        <hr class="section-separator">
+        <div class="content">
+            {self._generate_executive_summary_section(summary_stats, executive_summary)}
+            {self._generate_charts_section(summary_stats)}
+            {self._generate_vulnerabilities_section()}
+            {self._generate_recommendations()}
+        </div>
+        <hr class="section-separator">
+        {self._generate_footer()}
+    </div>
+    <script>
+        {self._generate_javascript(summary_stats)}
+    </script>
+</body>
+</html>"""
+    
+    def _get_css(self) -> str:
+        """Get minimalist CSS styles with dark mode support."""
+        return """
         * {
             margin: 0;
             padding: 0;
@@ -399,43 +465,57 @@
                 display: block !important;
             }
         }
-        
-    </style>
-</head>
-<body>
-    <div class="container">
-        
+        """
+    
+    def _generate_header(self) -> str:
+        """Generate header section."""
+        return """
         <div class="header">
             <button class="theme-toggle" onclick="toggleTheme()">Toggle Theme</button>
             <h1>🛡️ RICO Security Assessment Report</h1>
             <p class="subtitle">Enterprise API Security Assessment</p>
         </div>
+        """
+    
+    def _generate_meta_bar(self, stats: Dict[str, Any]) -> str:
+        """Generate meta information bar."""
+        target = self.metadata.get("target_url", "Unknown")
+        timestamp = self.metadata.get("scan_timestamp", datetime.utcnow().isoformat())
+        total = stats["total_vulnerabilities"]
         
-        
+        return f"""
         <div class="meta-bar">
             <table>
                 <tr>
                     <td>Generated:</td>
-                    <td>2026-02-28 11:06:13</td>
+                    <td>{datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")}</td>
                 </tr>
                 <tr>
                     <td>Target API:</td>
-                    <td>{'target_url': 'http://localhost:8000', 'scan_timestamp': '2026-02-28T11:06:13.721626'}</td>
+                    <td>{target}</td>
                 </tr>
                 <tr>
                     <td>Scan Date:</td>
-                    <td>2026-02-28T11:06:13.721686</td>
+                    <td>{timestamp}</td>
                 </tr>
                 <tr>
                     <td>Total Vulnerabilities:</td>
-                    <td>5</td>
+                    <td>{total}</td>
                 </tr>
             </table>
         </div>
+        """
+    
+    def _generate_executive_summary_section(self, stats: Dict[str, Any], summary: str) -> str:
+        """Generate executive summary section."""
+        total = stats["total_vulnerabilities"]
+        risk_score = stats["risk_score"]
+        risk_level = stats["risk_level"]
+        severity_dist = stats["severity_distribution"]
         
-        <hr class="section-separator">
-        <div class="content">
-            
+        risk_class = f"risk-{risk_level.lower()}"
+        
+        return f"""
         <h2 class="section-title">Section 1: Executive Summary</h2>
         <table class="summary-table">
             <thead>
@@ -447,33 +527,36 @@
             <tbody>
                 <tr>
                     <td>Risk Score</td>
-                    <td class="risk-medium">30.2 / 100</td>
+                    <td class="{risk_class}">{risk_score:.1f} / 100</td>
                 </tr>
                 <tr>
                     <td>Risk Level</td>
-                    <td class="risk-medium">MEDIUM</td>
+                    <td class="{risk_class}">{risk_level.upper()}</td>
                 </tr>
                 <tr>
                     <td>Total Vulnerabilities</td>
-                    <td>5</td>
+                    <td>{total}</td>
                 </tr>
                 <tr>
                     <td>Critical Vulnerabilities</td>
-                    <td class="severity-critical">2</td>
+                    <td class="severity-critical">{severity_dist.get('Critical', 0)}</td>
                 </tr>
                 <tr>
                     <td>High Vulnerabilities</td>
-                    <td class="severity-high">1</td>
+                    <td class="severity-high">{severity_dist.get('High', 0)}</td>
                 </tr>
                 <tr>
                     <td>Medium Vulnerabilities</td>
-                    <td class="severity-medium">2</td>
+                    <td class="severity-medium">{severity_dist.get('Medium', 0)}</td>
                 </tr>
             </tbody>
         </table>
-        <p style="margin-top: 20px; font-size: 14px; line-height: 1.8;">This scan identified 5 vulnerabilities including 2 critical issues. The most significant risks relate to IDOR (2 instances), SQL Injection (1 instance). Remediation should be prioritized based on endpoint exposure and data sensitivity.</p>
-        
-            
+        <p style="margin-top: 20px; font-size: 14px; line-height: 1.8;">{summary}</p>
+        """
+    
+    def _generate_charts_section(self, stats: Dict[str, Any]) -> str:
+        """Generate charts section."""
+        return """
         <h2 class="section-title">Section 2: Risk Analysis</h2>
         <div class="charts-grid">
             <div class="chart-container">
@@ -485,8 +568,21 @@
                 <canvas id="owaspChart"></canvas>
             </div>
         </div>
+        """
+    
+    def _generate_vulnerabilities_section(self) -> str:
+        """Generate vulnerabilities section."""
+        if not self.vulnerabilities:
+            return """
+            <h2 class="section-title">Section 3: Identified Vulnerabilities</h2>
+            <p>No vulnerabilities detected. The API appears to follow security best practices.</p>
+            """
         
-            
+        vulns_html = []
+        for idx, vuln in enumerate(self.vulnerabilities, 1):
+            vulns_html.append(self._format_vulnerability_html(vuln, idx))
+        
+        return f"""
         <h2 class="section-title">Section 3: Identified Vulnerabilities</h2>
         <table>
             <thead>
@@ -499,121 +595,69 @@
                 </tr>
             </thead>
             <tbody>
-                
-                <tr class="vuln-row" onclick="toggleDetails(1)">
-                    <td class="font-mono">GET /users/search</td>
-                    <td>SQL Injection</td>
-                    <td class="severity-critical">Critical</td>
-                    <td class="text-center">95%</td>
-                    <td class="text-center">
-                        <span class="expand-icon" id="icon-1">▼</span>
-                    </td>
-                </tr>
-                <tr>
-                    <td colspan="5" style="padding: 0; border: none;">
-                        <div class="vuln-details" id="details-1">
-                            <div class="detail-section">
-                                <h4>📋 Description</h4>
-                                <p>SQL injection vulnerability detected in search parameter. Attacker can execute arbitrary SQL queries.</p>
-                            </div>
-                            <div class="detail-section"><h4>📋 Compliance Mapping</h4><p><strong>CWE:</strong> CWE-89 | <strong>OWASP:</strong> API8:2023 | (Security Misconfiguration)</p></div>
-                            <div class="detail-section"><h4>🔬 Proof of Concept</h4><div class="code-block">curl -X GET &#39;http://localhost:8000/users/search?q=&#39; OR 1=1--&#39;</div></div>
-                        </div>
-                    </td>
-                </tr>
-        
-                <tr class="vuln-row" onclick="toggleDetails(2)">
-                    <td class="font-mono">GET /users/{user_id}/orders</td>
-                    <td>IDOR</td>
-                    <td class="severity-high">High</td>
-                    <td class="text-center">85%</td>
-                    <td class="text-center">
-                        <span class="expand-icon" id="icon-2">▼</span>
-                    </td>
-                </tr>
-                <tr>
-                    <td colspan="5" style="padding: 0; border: none;">
-                        <div class="vuln-details" id="details-2">
-                            <div class="detail-section">
-                                <h4>📋 Description</h4>
-                                <p>Insecure Direct Object Reference allows accessing other users' orders by manipulating the user_id parameter.</p>
-                            </div>
-                            <div class="detail-section"><h4>📋 Compliance Mapping</h4><p><strong>CWE:</strong> CWE-639 | <strong>OWASP:</strong> API1:2023 | (Broken Object Level Authorization)</p></div>
-                            <div class="detail-section"><h4>🔬 Proof of Concept</h4><div class="code-block">curl -X GET &#39;http://localhost:8000/users/999/orders&#39;</div></div>
-                        </div>
-                    </td>
-                </tr>
-        
-                <tr class="vuln-row" onclick="toggleDetails(3)">
-                    <td class="font-mono">GET /admin/users</td>
-                    <td>Missing Authentication</td>
-                    <td class="severity-critical">Critical</td>
-                    <td class="text-center">90%</td>
-                    <td class="text-center">
-                        <span class="expand-icon" id="icon-3">▼</span>
-                    </td>
-                </tr>
-                <tr>
-                    <td colspan="5" style="padding: 0; border: none;">
-                        <div class="vuln-details" id="details-3">
-                            <div class="detail-section">
-                                <h4>📋 Description</h4>
-                                <p>Admin endpoint accessible without authentication. Exposes sensitive user data.</p>
-                            </div>
-                            <div class="detail-section"><h4>📋 Compliance Mapping</h4><p><strong>CWE:</strong> CWE-306 | <strong>OWASP:</strong> API2:2023 | (Broken Authentication)</p></div>
-                            <div class="detail-section"><h4>🔬 Proof of Concept</h4><div class="code-block">curl -X GET &#39;http://localhost:8000/admin/users&#39;</div></div>
-                        </div>
-                    </td>
-                </tr>
-        
-                <tr class="vuln-row" onclick="toggleDetails(4)">
-                    <td class="font-mono">GET /users/{user_id}</td>
-                    <td>IDOR</td>
-                    <td class="severity-medium">Medium</td>
-                    <td class="text-center">75%</td>
-                    <td class="text-center">
-                        <span class="expand-icon" id="icon-4">▼</span>
-                    </td>
-                </tr>
-                <tr>
-                    <td colspan="5" style="padding: 0; border: none;">
-                        <div class="vuln-details" id="details-4">
-                            <div class="detail-section">
-                                <h4>📋 Description</h4>
-                                <p>User profile endpoint allows accessing other users' information.</p>
-                            </div>
-                            <div class="detail-section"><h4>📋 Compliance Mapping</h4><p><strong>CWE:</strong> CWE-639 | <strong>OWASP:</strong> API1:2023 | (Broken Object Level Authorization)</p></div>
-                            <div class="detail-section"><h4>🔬 Proof of Concept</h4><div class="code-block">curl -X GET &#39;http://localhost:8000/users/123&#39;</div></div>
-                        </div>
-                    </td>
-                </tr>
-        
-                <tr class="vuln-row" onclick="toggleDetails(5)">
-                    <td class="font-mono">POST /users/update</td>
-                    <td>CSRF</td>
-                    <td class="severity-medium">Medium</td>
-                    <td class="text-center">70%</td>
-                    <td class="text-center">
-                        <span class="expand-icon" id="icon-5">▼</span>
-                    </td>
-                </tr>
-                <tr>
-                    <td colspan="5" style="padding: 0; border: none;">
-                        <div class="vuln-details" id="details-5">
-                            <div class="detail-section">
-                                <h4>📋 Description</h4>
-                                <p>Missing CSRF protection on user update endpoint.</p>
-                            </div>
-                            <div class="detail-section"><h4>📋 Compliance Mapping</h4><p><strong>CWE:</strong> CWE-352 | <strong>OWASP:</strong> API2:2023 | (Broken Authentication)</p></div>
-                            <div class="detail-section"><h4>🔬 Proof of Concept</h4><div class="code-block">curl -X POST &#39;http://localhost:8000/users/update&#39; -d &#39;email=attacker@evil.com&#39;</div></div>
-                        </div>
-                    </td>
-                </tr>
-        
+                {''.join(vulns_html)}
             </tbody>
         </table>
+        """
+    
+    def _format_vulnerability_html(self, vuln: Dict[str, Any], index: int) -> str:
+        """Format a single vulnerability as HTML."""
+        vuln_type = vuln.get("type", "Unknown")
+        endpoint = vuln.get("endpoint", "Unknown")
+        method = vuln.get("method", "")
+        severity = vuln.get("severity", "Low")
+        confidence = vuln.get("confidence", 0)
+        description = vuln.get("description", "No description available.")
         
-            
+        severity_class = f"severity-{severity.lower()}"
+        
+        # Build PoC section
+        poc_html = ""
+        poc = vuln.get("poc")
+        if poc and isinstance(poc, dict):
+            poc_content = poc.get("curl", poc.get("request", ""))
+            if poc_content:
+                poc_html = f'<div class="detail-section"><h4>🔬 Proof of Concept</h4><div class="code-block">{self._escape_html(poc_content)}</div></div>'
+        
+        # Build compliance info
+        compliance_html = ""
+        if vuln.get("owasp_category") or vuln.get("cwe_id"):
+            compliance_parts = []
+            if vuln.get("cwe_id"):
+                compliance_parts.append(f"<strong>CWE:</strong> {vuln['cwe_id']}")
+            if vuln.get("owasp_category"):
+                compliance_parts.append(f"<strong>OWASP:</strong> {vuln['owasp_category']}")
+            if vuln.get("owasp_name"):
+                compliance_parts.append(f"({vuln['owasp_name']})")
+            compliance_html = f'<div class="detail-section"><h4>📋 Compliance Mapping</h4><p>{" | ".join(compliance_parts)}</p></div>'
+        
+        return f"""
+                <tr class="vuln-row" onclick="toggleDetails({index})">
+                    <td class="font-mono">{method} {endpoint}</td>
+                    <td>{vuln_type}</td>
+                    <td class="{severity_class}">{severity}</td>
+                    <td class="text-center">{confidence:.0%}</td>
+                    <td class="text-center">
+                        <span class="expand-icon" id="icon-{index}">▼</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="5" style="padding: 0; border: none;">
+                        <div class="vuln-details" id="details-{index}">
+                            <div class="detail-section">
+                                <h4>📋 Description</h4>
+                                <p>{description}</p>
+                            </div>
+                            {compliance_html}
+                            {poc_html}
+                        </div>
+                    </td>
+                </tr>
+        """
+    
+    def _generate_recommendations(self) -> str:
+        """Generate recommendations section."""
+        return """
         <h2 class="section-title">Section 4: Recommendations</h2>
         <table>
             <thead>
@@ -649,63 +693,68 @@
                 </tr>
             </tbody>
         </table>
-        
-        </div>
-        <hr class="section-separator">
-        
+        """
+    
+    def _generate_footer(self) -> str:
+        """Generate footer section."""
+        return f"""
         <div class="footer">
             <p><strong>RICO Security Testing Framework</strong></p>
             <p>AI-Powered API Security Assessment Tool</p>
-            <p style="margin-top: 10px;">Report Generated: 2026-02-28 11:06:13 UTC</p>
+            <p style="margin-top: 10px;">Report Generated: {datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC")}</p>
             <p style="margin-top: 5px; font-size: 10px;">This report is confidential and intended for authorized personnel only.</p>
         </div>
+        """
+    
+    def _generate_javascript(self, stats: Dict[str, Any]) -> str:
+        """Generate JavaScript for charts and interactions."""
+        severity_dist = stats["severity_distribution"]
+        owasp_dist = stats["owasp_distribution"]
         
-    </div>
-    <script>
-        
+        return f"""
         // Theme Toggle
-        function toggleTheme() {
+        function toggleTheme() {{
             const body = document.body;
             body.classList.toggle('dark-mode');
             const isDark = body.classList.contains('dark-mode');
             localStorage.setItem('theme', isDark ? 'dark' : 'light');
-        }
+        }}
         
         // Load saved theme
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function() {{
             const savedTheme = localStorage.getItem('theme');
-            if (savedTheme === 'dark') {
+            if (savedTheme === 'dark') {{
                 document.body.classList.add('dark-mode');
-            }
-        });
+            }}
+        }});
         
         // Toggle vulnerability details
-        function toggleDetails(index) {
+        function toggleDetails(index) {{
             const details = document.getElementById('details-' + index);
             const icon = document.getElementById('icon-' + index);
             
-            if (details.classList.contains('active')) {
+            if (details.classList.contains('active')) {{
                 details.classList.remove('active');
                 icon.classList.remove('active');
-            } else {
+            }} else {{
                 details.classList.add('active');
                 icon.classList.add('active');
-            }
-        }
+            }}
+        }}
         
         // Severity Chart
         const severityCtx = document.getElementById('severityChart').getContext('2d');
-        new Chart(severityCtx, {
+        new Chart(severityCtx, {{
             type: 'doughnut',
-            data: {
+            data: {{
                 labels: ['Critical', 'High', 'Medium', 'Low', 'Info'],
-                datasets: [{
+                datasets: [{{
                     data: [
-                        2,
-                        1,
-                        2,
-                        0,
-                        0
+                        {severity_dist.get('Critical', 0)},
+                        {severity_dist.get('High', 0)},
+                        {severity_dist.get('Medium', 0)},
+                        {severity_dist.get('Low', 0)},
+                        {severity_dist.get('Info', 0)}
                     ],
                     backgroundColor: [
                         '#dc3545',
@@ -714,50 +763,86 @@
                         '#17a2b8',
                         '#28a745'
                     ]
-                }]
-            },
-            options: {
+                }}]
+            }},
+            options: {{
                 responsive: true,
                 maintainAspectRatio: false,
-                plugins: {
-                    legend: {
+                plugins: {{
+                    legend: {{
                         position: 'bottom'
-                    }
-                }
-            }
-        });
+                    }}
+                }}
+            }}
+        }});
         
         // OWASP Chart
         const owaspCtx = document.getElementById('owaspChart').getContext('2d');
-        new Chart(owaspCtx, {
+        new Chart(owaspCtx, {{
             type: 'bar',
-            data: {
-                labels: ["API8:2023", "API1:2023", "API2:2023"],
-                datasets: [{
+            data: {{
+                labels: {json.dumps(list(owasp_dist.keys()))},
+                datasets: [{{
                     label: 'Vulnerabilities',
-                    data: [1, 2, 2],
+                    data: {json.dumps(list(owasp_dist.values()))},
                     backgroundColor: '#000000'
-                }]
-            },
-            options: {
+                }}]
+            }},
+            options: {{
                 responsive: true,
                 maintainAspectRatio: false,
-                plugins: {
-                    legend: {
+                plugins: {{
+                    legend: {{
                         display: false
-                    }
-                },
-                scales: {
-                    y: {
+                    }}
+                }},
+                scales: {{
+                    y: {{
                         beginAtZero: true,
-                        ticks: {
+                        ticks: {{
                             stepSize: 1
-                        }
-                    }
-                }
-            }
-        });
+                        }}
+                    }}
+                }}
+            }}
+        }});
+        """
+    
+    def _escape_html(self, text: str) -> str:
+        """Escape HTML special characters."""
+        return (text
+                .replace("&", "&amp;")
+                .replace("<", "&lt;")
+                .replace(">", "&gt;")
+                .replace('"', "&quot;")
+                .replace("'", "&#39;"))
+    
+    def export_to_file(self, filepath: str, summary_stats: Dict[str, Any], executive_summary: str) -> None:
+        """
+        Export report to HTML file.
         
-    </script>
-</body>
-</html>
+        Args:
+            filepath: Output file path
+            summary_stats: Summary statistics
+            executive_summary: Executive summary text
+        """
+        report = self.generate(summary_stats, executive_summary)
+        
+        output_path = Path(filepath)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        
+        with open(output_path, 'w', encoding='utf-8') as f:
+            f.write(report)
+    
+    def export_to_string(self, summary_stats: Dict[str, Any], executive_summary: str) -> str:
+        """
+        Export report to HTML string.
+        
+        Args:
+            summary_stats: Summary statistics
+            executive_summary: Executive summary text
+            
+        Returns:
+            HTML string
+        """
+        return self.generate(summary_stats, executive_summary)

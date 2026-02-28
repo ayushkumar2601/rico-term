@@ -7,6 +7,7 @@ from rich.panel import Panel
 from rich.syntax import Syntax
 from pathlib import Path
 import json
+from rico.docs import show_docs
 
 from rico.brain.openapi_parser import parse_openapi, Endpoint
 from rico.executor.http_runner import run_request

@@ -1,0 +1,3 @@
+@echo off
+echo Opening RICO Security Report...
+start reports\report.html

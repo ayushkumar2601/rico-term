@@ -1,0 +1,185 @@
+{
+  "report_metadata": {
+    "tool": "RICO Security Scanner",
+    "version": "1.0.0",
+    "report_type": "API Security Assessment",
+    "generated_at": "2026-02-28T11:06:13.722557Z",
+    "target_url": {
+      "target_url": "http://localhost:8000",
+      "scan_timestamp": "2026-02-28T11:06:13.721626"
+    },
+    "scan_timestamp": "2026-02-28T11:06:13.721686"
+  },
+  "summary": {
+    "total_vulnerabilities": 5,
+    "risk_score": 30.25,
+    "risk_level": "Medium",
+    "highest_severity": "Critical",
+    "severity_distribution": {
+      "Critical": 2,
+      "High": 1,
+      "Medium": 2,
+      "Low": 0,
+      "Info": 0
+    },
+    "owasp_distribution": {
+      "API8:2023": 1,
+      "API1:2023": 2,
+      "API2:2023": 2
+    },
+    "cwe_distribution": {
+      "CWE-89": 1,
+      "CWE-639": 2,
+      "CWE-306": 1,
+      "CWE-352": 1
+    },
+    "key_exposure_areas": [
+      "IDOR (2 instances)",
+      "SQL Injection (1 instance)",
+      "Missing Authentication (1 instance)"
+    ]
+  },
+  "vulnerabilities": [
+    {
+      "id": "RICO-001",
+      "type": "SQL Injection",
+      "endpoint": "/users/search",
+      "method": "GET",
+      "severity": "Critical",
+      "confidence": 0.95,
+      "description": "SQL injection vulnerability detected in search parameter. Attacker can execute arbitrary SQL queries.",
+      "poc": {
+        "curl": "curl -X GET 'http://localhost:8000/users/search?q=' OR 1=1--'"
+      },
+      "owasp_category": "API8:2023",
+      "owasp_name": "Security Misconfiguration",
+      "owasp_description": "APIs and systems supporting them typically contain complex configurations meant to make them more customizable, leaving them vulnerable to various attacks.",
+      "cwe_id": "CWE-89",
+      "cwe_description": "Improper Neutralization of Special Elements used in an SQL Command"
+    },
+    {
+      "id": "RICO-002",
+      "type": "IDOR",
+      "endpoint": "/users/{user_id}/orders",
+      "method": "GET",
+      "severity": "High",
+      "confidence": 0.85,
+      "description": "Insecure Direct Object Reference allows accessing other users' orders by manipulating the user_id parameter.",
+      "poc": {
+        "curl": "curl -X GET 'http://localhost:8000/users/999/orders'"
+      },
+      "owasp_category": "API1:2023",
+      "owasp_name": "Broken Object Level Authorization",
+      "owasp_description": "APIs tend to expose endpoints that handle object identifiers, creating a wide attack surface of Object Level Access Control issues.",
+      "cwe_id": "CWE-639",
+      "cwe_description": "Authorization Bypass Through User-Controlled Key"
+    },
+    {
+      "id": "RICO-003",
+      "type": "Missing Authentication",
+      "endpoint": "/admin/users",
+      "method": "GET",
+      "severity": "Critical",
+      "confidence": 0.9,
+      "description": "Admin endpoint accessible without authentication. Exposes sensitive user data.",
+      "poc": {
+        "curl": "curl -X GET 'http://localhost:8000/admin/users'"
+      },
+      "owasp_category": "API2:2023",
+      "owasp_name": "Broken Authentication",
+      "owasp_description": "Authentication mechanisms are often implemented incorrectly, allowing attackers to compromise authentication tokens or exploit implementation flaws.",
+      "cwe_id": "CWE-306",
+      "cwe_description": "Missing Authentication for Critical Function"
+    },
+    {
+      "id": "RICO-004",
+      "type": "IDOR",
+      "endpoint": "/users/{user_id}",
+      "method": "GET",
+      "severity": "Medium",
+      "confidence": 0.75,
+      "description": "User profile endpoint allows accessing other users' information.",
+      "poc": {
+        "curl": "curl -X GET 'http://localhost:8000/users/123'"
+      },
+      "owasp_category": "API1:2023",
+      "owasp_name": "Broken Object Level Authorization",
+      "owasp_description": "APIs tend to expose endpoints that handle object identifiers, creating a wide attack surface of Object Level Access Control issues.",
+      "cwe_id": "CWE-639",
+      "cwe_description": "Authorization Bypass Through User-Controlled Key"
+    },
+    {
+      "id": "RICO-005",
+      "type": "CSRF",
+      "endpoint": "/users/update",
+      "method": "POST",
+      "severity": "Medium",
+      "confidence": 0.7,
+      "description": "Missing CSRF protection on user update endpoint.",
+      "poc": {
+        "curl": "curl -X POST 'http://localhost:8000/users/update' -d 'email=attacker@evil.com'"
+      },
+      "owasp_category": "API2:2023",
+      "owasp_name": "Broken Authentication",
+      "owasp_description": "Lack of CSRF protection allows attackers to perform unauthorized actions on behalf of authenticated users.",
+      "cwe_id": "CWE-352",
+      "cwe_description": "Cross-Site Request Forgery (CSRF)"
+    }
+  ],
+  "compliance": {
+    "owasp_api_top_10_2023": [
+      {
+        "category": "API1:2023",
+        "name": "Broken Object Level Authorization",
+        "count": 2,
+        "highest_severity": "High"
+      },
+      {
+        "category": "API2:2023",
+        "name": "Broken Authentication",
+        "count": 2,
+        "highest_severity": "Critical"
+      },
+      {
+        "category": "API8:2023",
+        "name": "Security Misconfiguration",
+        "count": 1,
+        "highest_severity": "Critical"
+      }
+    ],
+    "cwe_coverage": [
+      {
+        "cwe_id": "CWE-306",
+        "description": "Missing Authentication for Critical Function",
+        "count": 1,
+        "vulnerability_types": [
+          "Missing Authentication"
+        ]
+      },
+      {
+        "cwe_id": "CWE-352",
+        "description": "Cross-Site Request Forgery (CSRF)",
+        "count": 1,
+        "vulnerability_types": [
+          "CSRF"
+        ]
+      },
+      {
+        "cwe_id": "CWE-639",
+        "description": "Authorization Bypass Through User-Controlled Key",
+        "count": 2,
+        "vulnerability_types": [
+          "IDOR"
+        ]
+      },
+      {
+        "cwe_id": "CWE-89",
+        "description": "Improper Neutralization of Special Elements used in an SQL Command",
+        "count": 1,
+        "vulnerability_types": [
+          "SQL Injection"
+        ]
+      }
+    ]
+  }
+}
