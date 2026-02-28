@@ -1,30 +1,48 @@
-"""Snowflake Cortex LLM integration for adaptive attack reasoning."""
+"""
+Snowflake Cortex LLM Client
+
+Provides LLM reasoning capabilities using Snowflake Cortex.
+This is a future-ready module for when Cortex becomes available in the region.
+
+Architecture Role:
+- Snowflake: Stores and retrieves historical exploit intelligence
+- Cortex: Analyzes patterns and generates adaptive payloads (when available)
+
+Note: Currently not available in DAAGYVQ-MX75757 region.
+      System uses Groq as fallback reasoning engine.
+"""
 import logging
 from typing import Optional, Dict, Any
 from rico.db.snowflake_client import get_connection
 
 # Setup logger
-logger = logging.getLogger("rico.cortex")
+logger = logging.getLogger("rico.ai.cortex")
 
 
 def cortex_complete(
     prompt: str,
-    model: str = "llama3-70b",
-    max_tokens: int = 500
+    temperature: float = 0.3,
+    max_tokens: int = 300,
+    model: str = "llama3-70b"
 ) -> Optional[str]:
     """
-    Use Snowflake Cortex LLM to generate attack payloads or reasoning.
+    Generate completion using Snowflake Cortex LLM.
     
     Snowflake Cortex provides serverless LLM inference directly in the data warehouse,
     enabling AI-powered attack planning without external API calls.
     
     Args:
         prompt: The prompt to send to the LLM
-        model: Cortex model to use (llama3-70b, mistral-large, etc.)
+        temperature: Sampling temperature (0.0-1.0) - Note: May not be supported by all Cortex models
         max_tokens: Maximum tokens to generate
+        model: Cortex model to use (llama3-70b, mistral-large, etc.)
         
     Returns:
         str: LLM response text, or None if failed
+        
+    Note:
+        This function is currently not usable in DAAGYVQ-MX75757 region.
+        The system automatically falls back to Groq when USE_CORTEX=false.
     """
     try:
         conn = get_connection()

@@ -1,45 +1,57 @@
-"""Adaptive payload generation using Groq AI and Snowflake intelligence."""
+"""
+Adaptive Payload Generation using Hybrid AI Architecture
+
+Architecture:
+- Snowflake: Security Intelligence Warehouse (stores historical exploit data)
+- AI Provider: LLM Reasoning Engine (Groq or Cortex)
+  - Current: Groq (due to regional Cortex availability)
+  - Future: Seamless migration to Snowflake Cortex when available
+
+This module retrieves historical intelligence from Snowflake and uses
+an AI reasoning engine to generate adaptive, context-aware payloads.
+"""
 import logging
 from typing import List, Optional, Dict, Any
-from groq import Groq
-import os
 
 from rico.db.retrieve import get_top_successful_payloads, get_payload_statistics
+from rico.ai.provider import generate_completion, is_ai_enabled, get_provider_info
 
 logger = logging.getLogger("rico.ai.adaptive")
 
 
 class AdaptivePayloadGenerator:
     """
-    Generates adaptive attack payloads using Groq AI reasoning
-    and Snowflake intelligence storage.
+    Generates adaptive attack payloads using Hybrid AI Architecture.
     
     Architecture:
-    1. Retrieve successful payloads from Snowflake
-    2. Inject context into Groq prompt
-    3. Generate improved payload
+    1. Retrieve successful payloads from Snowflake (Intelligence Warehouse)
+    2. Inject context into AI provider prompt (RAG pattern)
+    3. Generate improved payload using AI reasoning engine
     4. Return for execution (storage handled by existing flow)
+    
+    AI Provider:
+    - Current: Groq (llama-3.3-70b-versatile)
+    - Future: Snowflake Cortex (when available in region)
+    - Abstraction: Seamless switching via provider layer
     """
     
-    def __init__(self, api_key: Optional[str] = None):
+    def __init__(self):
         """
         Initialize adaptive payload generator.
         
-        Args:
-            api_key: Groq API key. If None, reads from GROQ_API_KEY env var.
+        Uses the configured AI provider (Groq or Cortex) via abstraction layer.
         """
-        self.api_key = api_key or os.getenv("GROQ_API_KEY")
+        self.provider_info = get_provider_info()
         
-        if not self.api_key:
-            logger.warning("Groq API key not found. Adaptive payloads disabled.")
-            self.client = None
+        if not is_ai_enabled():
+            logger.warning("No AI provider configured. Adaptive payloads disabled.")
+            logger.info("Set GROQ_API_KEY or enable Cortex to use adaptive intelligence.")
         else:
-            self.client = Groq(api_key=self.api_key)
-            logger.info("Adaptive payload generator initialized with Groq")
+            logger.info(f"Adaptive payload generator initialized with {self.provider_info['provider']}")
     
     def is_enabled(self) -> bool:
         """Check if adaptive payload generation is enabled."""
-        return self.client is not None
+        return is_ai_enabled()
     
     def generate_adaptive_sqli_payload(
         self,
@@ -87,28 +99,13 @@ class AdaptivePayloadGenerator:
                 stats=stats
             )
             
-            # Generate payload using Groq
-            response = self.client.chat.completions.create(
-                model="llama-3.3-70b-versatile",  # Updated model
-                messages=[
-                    {
-                        "role": "system",
-                        "content": (
-                            "You are an expert API security researcher specializing in SQL injection. "
-                            "Generate advanced SQL injection payloads based on historical success patterns. "
-                            "Return ONLY the payload string, no explanations."
-                        )
-                    },
-                    {
-                        "role": "user",
-                        "content": prompt
-                    }
-                ],
+            # Generate payload using AI provider (Groq or Cortex)
+            logger.info(f"Generating SQL injection payload using {self.provider_info['provider']}")
+            payload = generate_completion(
+                prompt=prompt,
                 temperature=0.3,  # Low temperature for focused generation
-                max_tokens=200,
+                max_tokens=200
             )
-            
-            payload = response.choices[0].message.content.strip()
             
             # Clean up payload (remove quotes, explanations, etc.)
             payload = self._clean_payload(payload)
@@ -166,28 +163,13 @@ class AdaptivePayloadGenerator:
                 stats=stats
             )
             
-            # Generate strategy using Groq
-            response = self.client.chat.completions.create(
-                model="llama-3.3-70b-versatile",  # Updated model
-                messages=[
-                    {
-                        "role": "system",
-                        "content": (
-                            "You are an expert API security researcher specializing in IDOR vulnerabilities. "
-                            "Suggest advanced IDOR testing strategies based on historical success patterns. "
-                            "Return a JSON object with 'test_ids' (array of IDs to test) and 'strategy' (brief description)."
-                        )
-                    },
-                    {
-                        "role": "user",
-                        "content": prompt
-                    }
-                ],
+            # Generate strategy using AI provider (Groq or Cortex)
+            logger.info(f"Generating IDOR strategy using {self.provider_info['provider']}")
+            strategy_text = generate_completion(
+                prompt=prompt,
                 temperature=0.3,
-                max_tokens=300,
+                max_tokens=300
             )
-            
-            strategy_text = response.choices[0].message.content.strip()
             
             # Try to parse as JSON
             import json
