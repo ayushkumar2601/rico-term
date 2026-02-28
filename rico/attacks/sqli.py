@@ -3,7 +3,11 @@ import re
 from typing import Dict, Any
 from rico.executor.http_runner import run_request
 from rico.attacks.detector import detect_vulnerability
+from rico.ai.adaptive_payloads import get_adaptive_generator
 import httpx
+import logging
+
+logger = logging.getLogger("rico.attacks.sqli")
 
 
 # Common SQL injection payloads (error-based)
@@ -297,6 +301,75 @@ async def test_sqli(
                 f"No SQL injection detected. Tested {len(SQL_PAYLOADS[:3])} error-based "
                 f"and {min(2, len(BOOLEAN_PAYLOADS))} boolean-based payloads."
             )
+        
+        # Phase 3: Adaptive payload generation (if enabled and no high-confidence detection yet)
+        # Only attempt if we haven't found a vulnerability with high confidence
+        if max_confidence < 90:
+            try:
+                generator = get_adaptive_generator()
+                if generator.is_enabled():
+                    logger.info("Attempting adaptive SQL injection payload generation")
+                    
+                    # Determine API framework from base_url or endpoint
+                    api_framework = None
+                    if "fastapi" in base_url.lower() or "fastapi" in endpoint.lower():
+                        api_framework = "FastAPI"
+                    elif "flask" in base_url.lower() or "flask" in endpoint.lower():
+                        api_framework = "Flask"
+                    
+                    # Generate adaptive payload
+                    adaptive_payload = generator.generate_adaptive_sqli_payload(
+                        api_framework=api_framework,
+                        endpoint_context=f"{method} {endpoint}"
+                    )
+                    
+                    if adaptive_payload:
+                        logger.info(f"Testing adaptive payload: {adaptive_payload[:50]}...")
+                        
+                        # Test adaptive payload
+                        if path_params:
+                            test_url = url
+                            for param in path_params:
+                                test_url = test_url.replace(f"{{{param}}}", adaptive_payload)
+                        else:
+                            test_url = f"{url}?id={adaptive_payload}"
+                        
+                        adaptive_response = await run_request(
+                            method=method,
+                            url=test_url,
+                            timeout=5.0
+                        )
+                        
+                        # Analyze adaptive payload result
+                        detection = detect_vulnerability(
+                            attack_type="SQL Injection",
+                            mode="error",
+                            endpoint=endpoint,
+                            baseline_response={
+                                "status": baseline_status,
+                                "text": baseline_response or "",
+                                "time": baseline_time
+                            },
+                            test_response={
+                                "status": adaptive_response.status_code,
+                                "text": adaptive_response.response_text,
+                                "time": adaptive_response.response_time
+                            },
+                            additional_data={"payload": adaptive_payload, "mode": "adaptive"}
+                        )
+                        
+                        # Update result if adaptive payload found something
+                        if detection.confidence > max_confidence:
+                            max_confidence = detection.confidence
+                            result["vulnerable"] = detection.vulnerable
+                            result["confidence"] = detection.confidence
+                            result["details"] = f"[ADAPTIVE] {detection.reason}"
+                            logger.info(f"Adaptive payload improved detection: {detection.confidence}% confidence")
+                    
+            except Exception as e:
+                logger.debug(f"Adaptive payload generation failed: {str(e)}")
+                # Don't fail the entire test if adaptive generation fails
+                pass
     
     except Exception as e:
         result["details"] = f"Error during SQL injection test: {str(e)}"
