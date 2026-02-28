@@ -590,7 +590,7 @@
             <table>
                 <tr>
                     <td>Generated:</td>
-                    <td>2026-02-28 14:59:29</td>
+                    <td>2026-02-28 15:18:08</td>
                 </tr>
                 <tr>
                     <td>Target API:</td>
@@ -598,7 +598,7 @@
                 </tr>
                 <tr>
                     <td>Total Tests:</td>
-                    <td>43</td>
+                    <td>48</td>
                 </tr>
             </table>
         </div>
@@ -619,7 +619,7 @@
                 <tbody>
                     <tr>
                         <td>Security Score</td>
-                        <td>70 / 100</td>
+                        <td>76 / 100</td>
                     </tr>
                     <tr>
                         <td>Risk Level</td>
@@ -635,11 +635,11 @@
                     </tr>
                     <tr>
                         <td>Medium Vulnerabilities</td>
-                        <td class="severity-medium">5</td>
+                        <td class="severity-medium">4</td>
                     </tr>
                     <tr>
                         <td>Safe Endpoints</td>
-                        <td class="status-pass">38</td>
+                        <td class="status-pass">44</td>
                     </tr>
                 </tbody>
             </table>
@@ -750,7 +750,7 @@
                     </tr>
                     
                     <tr class="vuln-row" onclick="toggleDetails(3)">
-                        <td class="font-mono">/sqli/search</td>
+                        <td class="font-mono">/sqli/search/secure</td>
                         <td>Missing Auth</td>
                         <td class="severity-medium">Medium</td>
                         <td class="text-center">7.5</td>
@@ -762,47 +762,6 @@
                     <tr>
                         <td colspan="6" style="padding: 0; border: none;">
                             <div class="vuln-details" id="details-3">
-                                <div class="detail-section">
-                                    <h4>📋 Description</h4>
-                                    <p>Sensitive endpoint accessible without authentication (Status: 200). Contains sensitive data or path parameters.</p>
-                                </div>
-
-                                <div class="detail-section">
-                                    <h4>⚠️ Risk Explanation</h4>
-                                    <p>This vulnerability has been classified as <strong class="severity-medium">Medium</strong> severity with a CVSS score of <strong>7.5</strong>. The confidence level of this detection is <strong>70%</strong>.</p>
-                                </div>
-
-                                <div class="detail-section">
-                                    <h4>🔬 Proof of Concept</h4>
-                                    <div class="code-block">curl -X GET &#34;http://localhost:8000/sqli/search&#34; \
-  -H &#34;Content-Type: application/json&#34;</div>
-                                </div>
-
-                                <div class="detail-section">
-                                    <h4>🔧 Recommended Fix</h4>
-                                    <div class="fix-box">Add authentication middleware:
-1. Require valid authentication tokens for all protected endpoints
-2. Implement JWT or session-based authentication
-3. Return 401 Unauthorized for unauthenticated requests
-4. Use role-based access control (RBAC) for different user levels</div>
-                                </div>
-                            </div>
-                        </td>
-                    </tr>
-                    
-                    <tr class="vuln-row" onclick="toggleDetails(4)">
-                        <td class="font-mono">/sqli/search/secure</td>
-                        <td>Missing Auth</td>
-                        <td class="severity-medium">Medium</td>
-                        <td class="text-center">7.5</td>
-                        <td class="text-center">70%</td>
-                        <td class="text-center">
-                            <span class="expand-icon" id="icon-4">▼</span>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td colspan="6" style="padding: 0; border: none;">
-                            <div class="vuln-details" id="details-4">
                                 <div class="detail-section">
                                     <h4>📋 Description</h4>
                                     <p>Sensitive endpoint accessible without authentication (Status: 200). Contains sensitive data or path parameters.</p>
@@ -831,19 +790,19 @@
                         </td>
                     </tr>
                     
-                    <tr class="vuln-row" onclick="toggleDetails(5)">
+                    <tr class="vuln-row" onclick="toggleDetails(4)">
                         <td class="font-mono">/admin/promote/{user_id}/vulnerable</td>
                         <td>IDOR</td>
                         <td class="severity-medium">Medium</td>
                         <td class="text-center">8.0</td>
                         <td class="text-center">75%</td>
                         <td class="text-center">
-                            <span class="expand-icon" id="icon-5">▼</span>
+                            <span class="expand-icon" id="icon-4">▼</span>
                         </td>
                     </tr>
                     <tr>
                         <td colspan="6" style="padding: 0; border: none;">
-                            <div class="vuln-details" id="details-5">
+                            <div class="vuln-details" id="details-4">
                                 <div class="detail-section">
                                     <h4>📋 Description</h4>
                                     <p>Different resources accessible without authorization; Response content differs: 40.0% value differences</p>
@@ -880,7 +839,7 @@
             
             <h2 class="section-title">Section 4: Safe Endpoints</h2>
             <details>
-                <summary>▶ View Safe Endpoints (38 endpoints passed all tests)</summary>
+                <summary>▶ View Safe Endpoints (44 endpoints passed all tests)</summary>
                 <table>
                     <thead>
                         <tr>
@@ -917,11 +876,6 @@
                             
                         
                             
-                                
-                            
-                            
-                        
-                            
                             
                         
                             
@@ -932,52 +886,6 @@
                             
                             
                         
-                            
-                                
-                            
-                            
-                        
-                            
-                            
-                        
-                            
-                                
-                            
-                            
-                        
-                            
-                                
-                            
-                            
-                        
-                            
-                                
-                            
-                            
-                        
-                            
-                            
-                        
-                            
-                                
-                            
-                            
-                        
-                            
-                            
-                        
-                            
-                                
-                            
-                            
-                        
-                            
-                                
-                            
-                            
-                        
-                            
-                                
                             
                             
                         
@@ -1012,6 +920,75 @@
                         
                             
                                 
+                            
+                            
+                        
+                            
+                            
+                        
+                            
+                                
+                            
+                            
+                        
+                            
+                            
+                        
+                            
+                                
+                            
+                            
+                        
+                            
+                                
+                            
+                            
+                        
+                            
+                                
+                            
+                            
+                        
+                            
+                                
+                            
+                            
+                        
+                            
+                            
+                        
+                            
+                                
+                            
+                            
+                        
+                            
+                                
+                            
+                            
+                        
+                            
+                            
+                        
+                            
+                                
+                            
+                            
+                        
+                            
+                            
+                        
+                            
+                            
+                        
+                            
+                                
+                            
+                            
+                        
+                            
+                            
+                        
                             
                             
                         
@@ -1080,14 +1057,14 @@
                             <td class="font-mono">/users/{user_id}</td>
                             <td class="">-</td>
                             <td class="">-</td>
-                            <td class="">-</td>
+                            <td class="status-pass">PASS</td>
                         </tr>
                         
                         <tr>
                             <td class="font-mono">/users/{user_id}/secure</td>
                             <td class="status-pass">PASS</td>
                             <td class="">-</td>
-                            <td class="">-</td>
+                            <td class="status-pass">PASS</td>
                         </tr>
                         
                         <tr>
@@ -1113,7 +1090,7 @@
                         
                         <tr>
                             <td class="font-mono">/sqli/search/secure</td>
-                            <td class="">-</td>
+                            <td class="status-pass">PASS</td>
                             <td class="">-</td>
                             <td class="status-pass">PASS</td>
                         </tr>
@@ -1127,7 +1104,7 @@
                         
                         <tr>
                             <td class="font-mono">/sqli/product</td>
-                            <td class="">-</td>
+                            <td class="status-pass">PASS</td>
                             <td class="">-</td>
                             <td class="status-pass">PASS</td>
                         </tr>
@@ -1155,37 +1132,37 @@
                         
                         <tr>
                             <td class="font-mono">/files/read/secure</td>
+                            <td class="">-</td>
+                            <td class="">-</td>
                             <td class="status-pass">PASS</td>
-                            <td class="">-</td>
-                            <td class="">-</td>
                         </tr>
                         
                         <tr>
                             <td class="font-mono">/cmd/ping</td>
                             <td class="">-</td>
                             <td class="">-</td>
-                            <td class="status-pass">PASS</td>
+                            <td class="">-</td>
                         </tr>
                         
                         <tr>
                             <td class="font-mono">/cmd/ping/secure</td>
                             <td class="">-</td>
                             <td class="">-</td>
-                            <td class="">-</td>
+                            <td class="status-pass">PASS</td>
                         </tr>
                         
                         <tr>
                             <td class="font-mono">/business/transfer/vulnerable</td>
-                            <td class="">-</td>
+                            <td class="status-pass">PASS</td>
                             <td class="">-</td>
                             <td class="status-pass">PASS</td>
                         </tr>
                         
                         <tr>
                             <td class="font-mono">/business/transfer/secure</td>
+                            <td class="status-pass">PASS</td>
                             <td class="">-</td>
-                            <td class="">-</td>
-                            <td class="">-</td>
+                            <td class="status-pass">PASS</td>
                         </tr>
                         
                         <tr>
@@ -1273,7 +1250,7 @@
         <div class="footer">
             <p><strong>RICO Security Testing Framework</strong></p>
             <p>AI-Powered API Security Assessment Tool</p>
-            <p style="margin-top: 10px;">Report Generated: 2026-02-28 14:59:29</p>
+            <p style="margin-top: 10px;">Report Generated: 2026-02-28 15:18:08</p>
             <p style="margin-top: 5px; font-size: 10px;">This report is confidential and intended for authorized personnel only.</p>
         </div>
     </div>
