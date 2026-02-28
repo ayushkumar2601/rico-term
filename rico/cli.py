@@ -34,6 +34,10 @@ def init():
     """Initialize RICO"""
     print("[bold green]RICO initialized successfully! 🚀[/bold green]")
 
+@app.command()
+def docs():
+    """Show RICO documentation"""
+    show_docs()
 
 @app.command()
 def version():
