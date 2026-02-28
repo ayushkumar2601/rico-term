@@ -1,3 +1,4 @@
+# Core dependencies
 annotated-doc==0.0.4
 annotated-types==0.7.0
 anyio==4.12.1
@@ -37,7 +38,6 @@ referencing==0.37.0
 requests==2.32.5
 rfc3339-validator==0.1.4
 rich==14.3.3
--e git+https://github.com/ayushkumar2601/Rico-term.git@main#egg=rico_sec
 rpds-py==0.30.0
 ruamel.yaml==0.19.1
 shellingham==1.5.4
@@ -49,3 +49,8 @@ urllib3==2.6.3
 snowflake-connector-python
 python-dotenv
 cryptography
+
+# FastAPI and web dependencies
+fastapi==0.115.0
+uvicorn[standard]==0.32.1
+python-multipart==0.0.20

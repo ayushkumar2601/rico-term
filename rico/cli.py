@@ -492,11 +492,112 @@ def _run_security_scan(
     report_md: str = None,
 ):
     """Run security tests and generate comprehensive reports"""
+    from rico.services.scan_service import run_scan
+    from pathlib import Path
     
     # Display warning
     console.print("\n[bold yellow]⚠ WARNING: Security Testing Tool[/bold yellow]")
     console.print("[yellow]Only run these tests on APIs you own or have explicit permission to test.[/yellow]")
     console.print("[yellow]Unauthorized security testing may be illegal.[/yellow]\n")
+    
+    # Prepare report formats
+    report_formats = {}
+    if report_json:
+        report_formats["json"] = report_json
+    if report_html:
+        report_formats["html"] = report_html
+    if report_md:
+        report_formats["md"] = report_md
+    if report_sarif:
+        report_formats["sarif"] = report_sarif
+    
+    # If no specific formats requested, use defaults
+    if not report_formats:
+        output_path = Path(output_dir)
+        report_formats = {
+            "html": str(output_path / "report.html"),
+            "md": str(output_path / "report.md")
+        }
+    
+    try:
+        console.print(f"[cyan]Starting security scan...[/cyan]")
+        console.print(f"[cyan]Target:[/cyan] {url}")
+        console.print(f"[cyan]Spec:[/cyan] {spec}\n")
+        
+        # Run scan using service layer
+        result = run_scan(
+            spec_path=spec,
+            base_url=url,
+            token=token,
+            max_endpoints=max_endpoints,
+            use_ai=use_ai,
+            use_agentic_ai=agentic_ai,
+            output_dir=output_dir,
+            report_formats=report_formats
+        )
+        
+        # Display results
+        console.print(f"\n[bold]Scan Complete![/bold]")
+        console.print(f"[cyan]Scan ID:[/cyan] {result['scan_id']}")
+        console.print(f"[cyan]Duration:[/cyan] {result['duration']:.2f}s")
+        console.print(f"[cyan]Endpoints Tested:[/cyan] {result['endpoints_tested']}/{result['total_endpoints']}")
+        
+        # Display security metrics
+        risk_color = "green" if result['risk_level'] == "LOW" else "yellow" if result['risk_level'] == "MEDIUM" else "red"
+        console.print(f"\n[bold]Security Score:[/bold] {result['security_score']}/100")
+        console.print(f"[bold {risk_color}]Risk Level:[/bold {risk_color}] {result['risk_level']}")
+        console.print(f"[bold]Total Vulnerabilities:[/bold] {result['total_vulnerabilities']}")
+        
+        # Display severity distribution
+        if result['total_vulnerabilities'] > 0:
+            console.print(f"\n[bold]Severity Distribution:[/bold]")
+            dist = result['severity_distribution']
+            if dist.get('Critical', 0) > 0:
+                console.print(f"  [red]Critical:[/red] {dist['Critical']}")
+            if dist.get('High', 0) > 0:
+                console.print(f"  [yellow]High:[/yellow] {dist['High']}")
+            if dist.get('Medium', 0) > 0:
+                console.print(f"  [yellow]Medium:[/yellow] {dist['Medium']}")
+            if dist.get('Low', 0) > 0:
+                console.print(f"  [blue]Low:[/blue] {dist['Low']}")
+        
+        console.print(f"\n[bold]Top Issue:[/bold] {result['top_issue']}")
+        
+        # Display generated reports
+        console.print(f"\n[cyan]Generated Reports:[/cyan]")
+        for format_type, filepath in report_formats.items():
+            console.print(f"  [green]✓[/green] {format_type.upper()}: {filepath}")
+        
+        # Pipeline enforcement
+        if fail_on:
+            from rico.cicd.pipeline_enforcer import PipelineEnforcer
+            
+            console.print(f"\n[cyan]Checking pipeline policy: --fail-on {fail_on}[/cyan]")
+            
+            try:
+                enforcer = PipelineEnforcer(fail_on)
+                enforcer.enforce(result['vulnerabilities'], console=console)
+            except ValueError as e:
+                console.print(f"[bold red]Error:[/bold red] {str(e)}")
+                raise typer.Exit(code=1)
+        
+        if result['total_vulnerabilities'] > 0:
+            console.print("\n[bold red]⚠ Vulnerabilities detected! Review the reports for details.[/bold red]")
+        else:
+            console.print("\n[bold green]✓ No vulnerabilities detected in basic tests.[/bold green]")
+            console.print("[dim]Note: These are basic tests. Manual security review is still recommended.[/dim]")
+    
+    except FileNotFoundError as e:
+        console.print(f"[bold red]Error:[/bold red] {str(e)}")
+        raise typer.Exit(code=1)
+    except ValueError as e:
+        console.print(f"[bold red]Error:[/bold red] {str(e)}")
+        raise typer.Exit(code=1)
+    except Exception as e:
+        console.print(f"[bold red]Unexpected error:[/bold red] {str(e)}")
+        import traceback
+        traceback.print_exc()
+        raise typer.Exit(code=1)
     
     async def run_tests_and_generate_reports():
         import time
@@ -1029,10 +1130,6 @@ def _run_security_scan(
             import traceback
             traceback.print_exc()
             raise typer.Exit(code=1)
-    
-    # Run the async function
-    asyncio.run(run_tests_and_generate_reports())
-
 
 def main():
     app()

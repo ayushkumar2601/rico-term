@@ -2,6 +2,20 @@
 Pipeline Enforcer - CI/CD Build Blocking Logic
 
 Implements severity-based build failure for DevSecOps pipelines.
+
+⚠️ WARNING: This module contains sys.exit() calls and is designed for CLI usage only.
+DO NOT import or use this module in web server contexts (FastAPI, Flask, etc.)
+as it will terminate the entire process.
+
+This module is safe for:
+- CLI applications (rico scan --fail-on critical)
+- CI/CD pipeline scripts
+- Standalone Python scripts
+
+This module is NOT safe for:
+- Web servers (FastAPI, Flask, Django)
+- Background workers
+- Long-running services
 """
 
 import sys
