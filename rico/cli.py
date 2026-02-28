@@ -427,6 +427,36 @@ def report(
     console.print("[yellow]Unauthorized security testing may be illegal.[/yellow]\n")
     
     async def run_tests_and_generate_reports():
+        import time
+        from rico.db.snowflake_client import is_snowflake_enabled
+        from rico.db.insert import insert_scan
+        from rico.attacks.adaptive import create_adaptive_engine
+        
+        scan_start_time = time.time()
+        scan_id = None
+        adaptive_engine = None
+        api_framework = "Unknown"
+        
+        # Initialize Snowflake integration if enabled
+        if is_snowflake_enabled():
+            console.print("[blue]❄️  Snowflake Intelligence Warehouse enabled[/blue]")
+            
+            # Determine API framework early
+            if spec and url:
+                if "fastapi" in spec.lower() or "fastapi" in url.lower():
+                    api_framework = "FastAPI"
+                elif "flask" in spec.lower() or "flask" in url.lower():
+                    api_framework = "Flask"
+                elif "express" in spec.lower():
+                    api_framework = "Express"
+            
+            # Create scan_id early so we can use it for payload logging
+            import uuid
+            scan_id = str(uuid.uuid4())
+            adaptive_engine = create_adaptive_engine(scan_id)
+        else:
+            console.print("[dim]Snowflake integration disabled (no credentials)[/dim]")
+        
         try:
             # Parse the OpenAPI spec
             console.print(f"[cyan]Parsing OpenAPI spec:[/cyan] {spec}")
@@ -489,6 +519,28 @@ def report(
             
             all_results = []
             
+            # Initialize payload logging for Snowflake
+            payload_logger = None
+            if adaptive_engine and scan_id:
+                # Create a simple payload logger
+                def log_payload(vuln_type, payload, endpoint_path, response_code, response_time, success):
+                    try:
+                        adaptive_engine.log_payload_result(
+                            vulnerability_type=vuln_type,
+                            payload=payload,
+                            endpoint_path=endpoint_path,
+                            response_code=response_code,
+                            response_time_ms=response_time * 1000,  # Convert to ms
+                            response_text="",
+                            exploit_success=success,
+                            api_framework=api_framework if 'api_framework' in locals() else "Unknown",
+                            auth_type="JWT" if token else "None"
+                        )
+                    except Exception as e:
+                        pass  # Silent fail for logging
+                
+                payload_logger = log_payload
+            
             # Test each endpoint
             for idx, endpoint in enumerate(endpoints, 1):
                 console.print(f"[cyan]Testing {idx}/{len(endpoints)}:[/cyan] [bold]{endpoint.method} {endpoint.path}[/bold]")
@@ -530,6 +582,17 @@ def report(
                             method=endpoint.method
                         )
                         
+                        # Log payload if Snowflake enabled
+                        if payload_logger and scan_id:
+                            payload_logger(
+                                "IDOR",
+                                f"ID manipulation on {endpoint.path}",
+                                endpoint.path,
+                                idor_result.get("status_code", 0),
+                                idor_result.get("response_time", 0),
+                                idor_result.get("vulnerable", False)
+                            )
+                        
                         # Add AI reasoning if enabled
                         if use_ai and classification:
                             try:
@@ -554,6 +617,17 @@ def report(
                             token=token
                         )
                         
+                        # Log payload if Snowflake enabled
+                        if payload_logger and scan_id:
+                            payload_logger(
+                                "Missing Authentication",
+                                f"Auth bypass attempt on {endpoint.path}",
+                                endpoint.path,
+                                auth_result.get("status_code", 0),
+                                auth_result.get("response_time", 0),
+                                auth_result.get("vulnerable", False)
+                            )
+                        
                         # Add AI reasoning if enabled
                         if use_ai and classification:
                             try:
@@ -577,6 +651,19 @@ def report(
                             method=endpoint.method,
                             parameters=endpoint.parameters
                         )
+                        
+                        # Log payload if Snowflake enabled
+                        if payload_logger and scan_id:
+                            # Log the SQL injection attempt
+                            payload_used = sqli_result.get("payload_used", "' OR '1'='1")
+                            payload_logger(
+                                "SQL Injection",
+                                payload_used,
+                                endpoint.path,
+                                sqli_result.get("status_code", 0),
+                                sqli_result.get("response_time", 0),
+                                sqli_result.get("vulnerable", False)
+                            )
                         
                         # Add AI reasoning if enabled
                         if use_ai and classification:
@@ -610,6 +697,9 @@ def report(
             console.print(f"Total tests: {total_tests}")
             console.print(f"Vulnerabilities found: [red]{vulnerable_count}[/red]")
             console.print(f"Safe: [green]{total_tests - vulnerable_count}[/green]")
+            
+            # Calculate scan duration
+            scan_duration = time.time() - scan_start_time
             
             # Generate reports
             console.print(f"\n[cyan]Generating reports...[/cyan]")
@@ -645,6 +735,64 @@ def report(
             console.print(f"\n[bold]Security Score:[/bold] {security_score}/100")
             console.print(f"[bold {risk_color}]Risk Level:[/bold {risk_color}] {risk_level}")
             console.print(f"[bold]Top Issue:[/bold] {top_issue}")
+            
+            # Store scan results in Snowflake
+            if is_snowflake_enabled():
+                console.print("\n[blue]❄️  Storing scan results in Snowflake...[/blue]")
+                try:
+                    # Determine API framework from spec or URL
+                    api_framework = "Unknown"
+                    if "fastapi" in spec.lower() or "fastapi" in url.lower():
+                        api_framework = "FastAPI"
+                    elif "flask" in spec.lower() or "flask" in url.lower():
+                        api_framework = "Flask"
+                    elif "express" in spec.lower():
+                        api_framework = "Express"
+                    
+                    # Insert scan record
+                    scan_id = insert_scan({
+                        "api_name": url.split("//")[-1].split("/")[0],
+                        "api_base_url": url,
+                        "framework": api_framework,
+                        "total_endpoints": len(endpoints),
+                        "total_vulnerabilities": vulnerable_count,
+                        "risk_score": security_score,
+                        "scan_duration_seconds": scan_duration
+                    })
+                    
+                    if scan_id:
+                        console.print(f"[green]✓[/green] Scan stored in Snowflake: {scan_id[:8]}...")
+                        console.print(f"[dim]Logged {total_tests} payload attempts[/dim]")
+                        
+                        # Store vulnerabilities
+                        from rico.db.insert import insert_vulnerability
+                        vuln_stored = 0
+                        for item in report_items:
+                            if item.status in ["VULNERABLE", "SUSPICIOUS"]:
+                                vuln_id = insert_vulnerability({
+                                    "scan_id": scan_id,
+                                    "endpoint_path": item.endpoint,
+                                    "vulnerability_type": item.attack_type,
+                                    "severity": item.severity,
+                                    "confidence": item.confidence,
+                                    "cvss_score": item.cvss_score,
+                                    "description": item.description,
+                                    "poc_curl": item.poc_curl or "",
+                                    "fix_suggestion": item.fix_suggestion or ""
+                                })
+                                if vuln_id:
+                                    vuln_stored += 1
+                        
+                        if vuln_stored > 0:
+                            console.print(f"[green]✓[/green] Stored {vuln_stored} vulnerability/vulnerabilities")
+                        
+                        console.print("[dim]Intelligence will be used in future scans[/dim]")
+                    else:
+                        console.print("[yellow]⚠ Failed to store scan in Snowflake[/yellow]")
+                        
+                except Exception as e:
+                    console.print(f"[yellow]⚠ Snowflake storage failed: {str(e)}[/yellow]")
+                    console.print("[dim]Continuing without Snowflake integration[/dim]")
             
             # Agentic AI Analysis
             if agentic_ai:
