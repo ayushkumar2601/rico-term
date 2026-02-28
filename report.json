@@ -1,0 +1,143 @@
+{
+  "report_metadata": {
+    "tool": "RICO Security Scanner",
+    "version": "1.0.0",
+    "report_type": "API Security Assessment",
+    "generated_at": "2026-02-28T11:29:21.118355Z",
+    "target_url": {
+      "target_url": "http://localhost:8000",
+      "scan_timestamp": "2026-02-28T11:29:21.118355"
+    },
+    "scan_timestamp": "2026-02-28T11:29:21.118355"
+  },
+  "summary": {
+    "total_vulnerabilities": 5,
+    "risk_score": 100,
+    "risk_level": "Critical",
+    "highest_severity": "Medium",
+    "severity_distribution": {
+      "Medium": 5,
+      "Critical": 0,
+      "High": 0,
+      "Low": 0,
+      "Info": 0
+    },
+    "owasp_distribution": {
+      "API1:2023": 3
+    },
+    "cwe_distribution": {
+      "CWE-639": 3
+    },
+    "key_exposure_areas": [
+      "IDOR (3 instances)",
+      "Missing Auth (2 instances)"
+    ]
+  },
+  "vulnerabilities": [
+    {
+      "id": "RICO-001",
+      "type": "IDOR",
+      "endpoint": "/users/{user_id}",
+      "method": "GET",
+      "severity": "Medium",
+      "confidence": 75,
+      "description": "Different resources accessible without authorization; Response content differs: 36.4% value differences",
+      "poc": {
+        "curl": "curl -X GET \"http://localhost:8000/users/{user_id}\" \\\n  -H \"Content-Type: application/json\""
+      },
+      "owasp_category": "API1:2023",
+      "owasp_name": "Broken Object Level Authorization",
+      "owasp_description": "APIs tend to expose endpoints that handle object identifiers, creating a wide attack surface of Object Level Access Control issues.",
+      "cwe_id": "CWE-639",
+      "cwe_description": "Authorization Bypass Through User-Controlled Key"
+    },
+    {
+      "id": "RICO-002",
+      "type": "IDOR",
+      "endpoint": "/users/{user_id}/orders",
+      "method": "GET",
+      "severity": "Medium",
+      "confidence": 75,
+      "description": "Different resources accessible without authorization; Response content differs: 1 structural changes; 35.7% value differences",
+      "poc": {
+        "curl": "curl -X GET \"http://localhost:8000/users/{user_id}/orders\" \\\n  -H \"Content-Type: application/json\""
+      },
+      "owasp_category": "API1:2023",
+      "owasp_name": "Broken Object Level Authorization",
+      "owasp_description": "APIs tend to expose endpoints that handle object identifiers, creating a wide attack surface of Object Level Access Control issues.",
+      "cwe_id": "CWE-639",
+      "cwe_description": "Authorization Bypass Through User-Controlled Key"
+    },
+    {
+      "id": "RICO-003",
+      "type": "Missing Auth",
+      "endpoint": "/sqli/search",
+      "method": "GET",
+      "severity": "Medium",
+      "confidence": 70,
+      "description": "Sensitive endpoint accessible without authentication (Status: 200). Contains sensitive data or path parameters.",
+      "poc": {
+        "curl": "curl -X GET \"http://localhost:8000/sqli/search\" \\\n  -H \"Content-Type: application/json\""
+      },
+      "owasp_category": null,
+      "owasp_name": null,
+      "owasp_description": null,
+      "cwe_id": null,
+      "cwe_description": null
+    },
+    {
+      "id": "RICO-004",
+      "type": "Missing Auth",
+      "endpoint": "/sqli/search/secure",
+      "method": "GET",
+      "severity": "Medium",
+      "confidence": 70,
+      "description": "Sensitive endpoint accessible without authentication (Status: 200). Contains sensitive data or path parameters.",
+      "poc": {
+        "curl": "curl -X GET \"http://localhost:8000/sqli/search/secure\" \\\n  -H \"Content-Type: application/json\""
+      },
+      "owasp_category": null,
+      "owasp_name": null,
+      "owasp_description": null,
+      "cwe_id": null,
+      "cwe_description": null
+    },
+    {
+      "id": "RICO-005",
+      "type": "IDOR",
+      "endpoint": "/admin/promote/{user_id}/vulnerable",
+      "method": "GET",
+      "severity": "Medium",
+      "confidence": 75,
+      "description": "Different resources accessible without authorization; Response content differs: 40.0% value differences",
+      "poc": {
+        "curl": "curl -X GET \"http://localhost:8000/admin/promote/{user_id}/vulnerable\" \\\n  -H \"Content-Type: application/json\""
+      },
+      "owasp_category": "API1:2023",
+      "owasp_name": "Broken Object Level Authorization",
+      "owasp_description": "APIs tend to expose endpoints that handle object identifiers, creating a wide attack surface of Object Level Access Control issues.",
+      "cwe_id": "CWE-639",
+      "cwe_description": "Authorization Bypass Through User-Controlled Key"
+    }
+  ],
+  "compliance": {
+    "owasp_api_top_10_2023": [
+      {
+        "category": "API1:2023",
+        "name": "Broken Object Level Authorization",
+        "count": 3,
+        "highest_severity": "Medium"
+      }
+    ],
+    "cwe_coverage": [
+      {
+        "cwe_id": "CWE-639",
+        "description": "Authorization Bypass Through User-Controlled Key",
+        "count": 3,
+        "vulnerability_types": [
+          "IDOR"
+        ]
+      }
+    ]
+  }
+}

@@ -422,7 +422,74 @@ def report(
     output_dir: str = typer.Option("reports", "--output", help="Output directory for reports"),
     use_ai: bool = typer.Option(False, "--ai", help="Enable AI-powered attack planning"),
     agentic_ai: bool = typer.Option(False, "--agentic-ai", help="Enable agentic AI reasoning layer"),
-    fail_on: str = typer.Option(None, "--fail-on", help="Fail build on severity level (critical/high/medium)"),
+    fail_on: str = typer.Option(None, "--fail-on", help="Fail build on severity level (critical/high/medium/low)"),
+    report_sarif: str = typer.Option(None, "--report-sarif", help="Generate SARIF report for GitHub integration"),
+    report_json: str = typer.Option(None, "--report-json", help="Generate JSON report"),
+    report_html: str = typer.Option(None, "--report-html", help="Generate HTML report"),
+    report_md: str = typer.Option(None, "--report-md", help="Generate Markdown report"),
+):
+    """Run security tests and generate comprehensive reports"""
+    _run_security_scan(
+        spec=spec,
+        url=url,
+        token=token,
+        max_endpoints=max_endpoints,
+        output_dir=output_dir,
+        use_ai=use_ai,
+        agentic_ai=agentic_ai,
+        fail_on=fail_on,
+        report_sarif=report_sarif,
+        report_json=report_json,
+        report_html=report_html,
+        report_md=report_md
+    )
+
+
+@app.command()
+def scan(
+    spec: str = typer.Option(..., "--spec", help="Path to OpenAPI spec file"),
+    url: str = typer.Option(..., "--url", help="Base URL of the API to test"),
+    token: str = typer.Option(None, "--token", help="Optional authentication token"),
+    max_endpoints: int = typer.Option(None, "--max-endpoints", help="Maximum endpoints to test (default: all)"),
+    output_dir: str = typer.Option("reports", "--output", help="Output directory for reports"),
+    use_ai: bool = typer.Option(False, "--ai", help="Enable AI-powered attack planning"),
+    agentic_ai: bool = typer.Option(False, "--agentic-ai", help="Enable agentic AI reasoning layer"),
+    fail_on: str = typer.Option(None, "--fail-on", help="Fail build on severity level (critical/high/medium/low)"),
+    report_sarif: str = typer.Option(None, "--report-sarif", help="Generate SARIF report for GitHub integration"),
+    report_json: str = typer.Option(None, "--report-json", help="Generate JSON report"),
+    report_html: str = typer.Option(None, "--report-html", help="Generate HTML report"),
+    report_md: str = typer.Option(None, "--report-md", help="Generate Markdown report"),
+):
+    """Run security scan (alias for report command)"""
+    _run_security_scan(
+        spec=spec,
+        url=url,
+        token=token,
+        max_endpoints=max_endpoints,
+        output_dir=output_dir,
+        use_ai=use_ai,
+        agentic_ai=agentic_ai,
+        fail_on=fail_on,
+        report_sarif=report_sarif,
+        report_json=report_json,
+        report_html=report_html,
+        report_md=report_md
+    )
+
+
+def _run_security_scan(
+    spec: str,
+    url: str,
+    token: str = None,
+    max_endpoints: int = None,
+    output_dir: str = "reports",
+    use_ai: bool = False,
+    agentic_ai: bool = False,
+    fail_on: str = None,
+    report_sarif: str = None,
+    report_json: str = None,
+    report_html: str = None,
+    report_md: str = None,
 ):
     """Run security tests and generate comprehensive reports"""
     
@@ -723,14 +790,79 @@ def report(
             output_path.mkdir(parents=True, exist_ok=True)
             
             # Generate Markdown report
-            md_path = output_path / "report.md"
+            md_path = report_md if report_md else output_path / "report.md"
             generate_markdown_report(report_items, url, str(md_path))
             console.print(f"[green]✓[/green] Markdown report: {md_path}")
             
             # Generate HTML report
-            html_path = output_path / "report.html"
+            html_path = report_html if report_html else output_path / "report.html"
             generate_html_report(report_items, url, str(html_path))
             console.print(f"[green]✓[/green] HTML report: {html_path}")
+            
+            # Generate JSON report if requested
+            if report_json:
+                from rico.reporting.report_builder import ReportBuilder
+                from datetime import datetime
+                
+                # Convert report items to vulnerability format
+                vulnerabilities = []
+                for item in report_items:
+                    if item.status in ["VULNERABLE", "SUSPICIOUS"]:
+                        vuln = {
+                            "id": f"RICO-{len(vulnerabilities)+1:03d}",
+                            "type": item.attack_type,
+                            "endpoint": item.endpoint,
+                            "method": item.method if hasattr(item, 'method') else "GET",
+                            "severity": item.severity,
+                            "confidence": item.confidence,
+                            "description": item.description,
+                            "poc": {"curl": item.poc_curl} if item.poc_curl else None
+                        }
+                        vulnerabilities.append(vuln)
+                
+                metadata = {
+                    "target_url": url,
+                    "scan_timestamp": datetime.utcnow().isoformat()
+                }
+                
+                builder = ReportBuilder(vulnerabilities, metadata)
+                builder.export_json(report_json)
+                console.print(f"[green]✓[/green] JSON report: {report_json}")
+            
+            # Generate SARIF report if requested
+            if report_sarif:
+                from rico.cicd.sarif_exporter import SARIFExporter
+                from datetime import datetime
+                
+                console.print(f"[cyan]Generating SARIF report for GitHub integration...[/cyan]")
+                
+                # Convert report items to vulnerability format for SARIF
+                vulnerabilities = []
+                for item in report_items:
+                    if item.status in ["VULNERABLE", "SUSPICIOUS"]:
+                        vuln = {
+                            "id": f"RICO-{len(vulnerabilities)+1:03d}",
+                            "type": item.attack_type,
+                            "endpoint": item.endpoint,
+                            "method": item.method if hasattr(item, 'method') else "GET",
+                            "severity": item.severity,
+                            "confidence": item.confidence,
+                            "description": item.description,
+                            "poc": {"curl": item.poc_curl} if item.poc_curl else None,
+                            "cwe_id": getattr(item, 'cwe_id', None),
+                            "owasp_category": getattr(item, 'owasp_category', None),
+                            "fix_suggestion": item.fix_suggestion if hasattr(item, 'fix_suggestion') else None
+                        }
+                        vulnerabilities.append(vuln)
+                
+                sarif_exporter = SARIFExporter(tool_name="RICO", tool_version="1.0.0")
+                sarif_exporter.export_to_file(
+                    filepath=report_sarif,
+                    vulnerabilities=vulnerabilities,
+                    target_url=url,
+                    scan_timestamp=datetime.utcnow().isoformat() + "Z"
+                )
+                console.print(f"[green]✓[/green] SARIF report: {report_sarif}")
             
             console.print(f"\n[bold green]Reports generated successfully![/bold green]")
             console.print(f"[dim]Open {html_path} in your browser to view the interactive report.[/dim]")
@@ -858,16 +990,33 @@ def report(
                 console.print("\n[bold green]✓ No vulnerabilities detected in basic tests.[/bold green]")
                 console.print("[dim]Note: These are basic tests. Manual security review is still recommended.[/dim]")
             
-            # Check fail-on flag for CI/CD
+            # Pipeline enforcement - MUST RUN LAST
             if fail_on:
-                from rico.reporter.report_builder import check_severity_threshold
-                should_fail = check_severity_threshold(report_items, fail_on)
+                from rico.cicd.pipeline_enforcer import PipelineEnforcer
                 
-                if should_fail:
-                    console.print(f"\n[bold red]❌ Build failed: {fail_on.upper()} or higher severity vulnerabilities detected![/bold red]")
+                console.print(f"\n[cyan]Checking pipeline policy: --fail-on {fail_on}[/cyan]")
+                
+                try:
+                    # Convert report items to vulnerability format
+                    vulnerabilities = []
+                    for item in report_items:
+                        if item.status in ["VULNERABLE", "SUSPICIOUS"]:
+                            vuln = {
+                                "type": item.attack_type,
+                                "endpoint": item.endpoint,
+                                "severity": item.severity,
+                                "confidence": item.confidence,
+                                "description": item.description
+                            }
+                            vulnerabilities.append(vuln)
+                    
+                    # Create enforcer and check
+                    enforcer = PipelineEnforcer(fail_on)
+                    enforcer.enforce(vulnerabilities, console=console)
+                    
+                except ValueError as e:
+                    console.print(f"[bold red]Error:[/bold red] {str(e)}")
                     raise typer.Exit(code=1)
-                else:
-                    console.print(f"\n[green]✓ No {fail_on.upper()} or higher severity vulnerabilities detected.[/green]")
             
         except FileNotFoundError as e:
             console.print(f"[bold red]Error:[/bold red] {str(e)}")

@@ -1,0 +1,128 @@
+name: RICO API Security Scan
+
+on:
+  pull_request:
+    branches: [ main, develop ]
+  push:
+    branches: [ main, develop ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  security-events: write
+  pull-requests: write
+
+jobs:
+  security-scan:
+    name: API Security Testing
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+      
+      - name: Install RICO
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .
+      
+      - name: Run RICO Security Scan
+        id: rico-scan
+        continue-on-error: true
+        run: |
+          rico scan \
+            --spec openapi.yaml \
+            --url ${{ secrets.API_BASE_URL || 'http://localhost:8000' }} \
+            --report-json reports/rico-report.json \
+            --report-html reports/rico-report.html \
+            --report-sarif reports/rico.sarif \
+            --fail-on critical
+        env:
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+      
+      - name: Upload SARIF to GitHub Security
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: reports/rico.sarif
+          category: rico-api-security
+      
+      - name: Upload Reports as Artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: rico-security-reports
+          path: reports/
+          retention-days: 30
+      
+      - name: Comment PR with Results
+        uses: actions/github-script@v7
+        if: github.event_name == 'pull_request' && always()
+        with:
+          script: |
+            const fs = require('fs');
+            
+            // Read JSON report
+            let reportData;
+            try {
+              reportData = JSON.parse(fs.readFileSync('reports/rico-report.json', 'utf8'));
+            } catch (error) {
+              console.log('Could not read report file');
+              return;
+            }
+            
+            const summary = reportData.summary || {};
+            const vulns = reportData.vulnerabilities || [];
+            
+            // Build comment
+            let comment = '## 🛡️ RICO API Security Scan Results\n\n';
+            comment += `**Risk Score:** ${summary.risk_score || 'N/A'}/100\n`;
+            comment += `**Risk Level:** ${summary.risk_level || 'N/A'}\n`;
+            comment += `**Total Vulnerabilities:** ${summary.total_vulnerabilities || 0}\n\n`;
+            
+            if (summary.severity_distribution) {
+              comment += '### Severity Distribution\n';
+              const dist = summary.severity_distribution;
+              if (dist.Critical > 0) comment += `- 🔴 Critical: ${dist.Critical}\n`;
+              if (dist.High > 0) comment += `- 🟠 High: ${dist.High}\n`;
+              if (dist.Medium > 0) comment += `- 🟡 Medium: ${dist.Medium}\n`;
+              if (dist.Low > 0) comment += `- 🔵 Low: ${dist.Low}\n`;
+              comment += '\n';
+            }
+            
+            if (vulns.length > 0) {
+              comment += '### Top Vulnerabilities\n';
+              vulns.slice(0, 5).forEach(v => {
+                const emoji = v.severity === 'Critical' ? '🔴' : 
+                             v.severity === 'High' ? '🟠' : 
+                             v.severity === 'Medium' ? '🟡' : '🔵';
+                comment += `${emoji} **${v.type}** in \`${v.endpoint}\` (${v.severity})\n`;
+              });
+              
+              if (vulns.length > 5) {
+                comment += `\n_...and ${vulns.length - 5} more vulnerabilities_\n`;
+              }
+            } else {
+              comment += '✅ No vulnerabilities detected!\n';
+            }
+            
+            comment += '\n📊 [View detailed reports in artifacts](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})';
+            
+            // Post comment
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+      
+      - name: Fail if Critical Vulnerabilities Found
+        if: steps.rico-scan.outcome == 'failure'
+        run: |
+          echo "❌ Build failed due to critical vulnerabilities"
+          exit 1

@@ -1,0 +1,203 @@
+{
+  "version": "2.1.0",
+  "$schema": "https://raw.githubusercontent.com/oasis-tcs/sarif-spec/master/Schemata/sarif-schema-2.1.0.json",
+  "runs": [
+    {
+      "tool": {
+        "driver": {
+          "name": "RICO",
+          "version": "1.0.0",
+          "informationUri": "https://github.com/yourusername/rico",
+          "rules": [
+            {
+              "id": "RICO-001",
+              "name": "SQL Injection",
+              "shortDescription": {
+                "text": "SQL Injection vulnerability detected"
+              },
+              "fullDescription": {
+                "text": "SQL injection vulnerability detected in search parameter"
+              },
+              "defaultConfiguration": {
+                "level": "error"
+              },
+              "properties": {
+                "tags": [
+                  "security",
+                  "api",
+                  "sql-injection"
+                ],
+                "precision": "high",
+                "security-severity": "9.0",
+                "cwe": "CWE-89",
+                "owasp": "API8:2023"
+              }
+            },
+            {
+              "id": "RICO-002",
+              "name": "IDOR",
+              "shortDescription": {
+                "text": "IDOR vulnerability detected"
+              },
+              "fullDescription": {
+                "text": "Insecure Direct Object Reference vulnerability"
+              },
+              "defaultConfiguration": {
+                "level": "error"
+              },
+              "properties": {
+                "tags": [
+                  "security",
+                  "api",
+                  "idor"
+                ],
+                "precision": "high",
+                "security-severity": "7.0",
+                "cwe": "CWE-639",
+                "owasp": "API1:2023"
+              }
+            },
+            {
+              "id": "RICO-003",
+              "name": "Missing Authentication",
+              "shortDescription": {
+                "text": "Missing Authentication vulnerability detected"
+              },
+              "fullDescription": {
+                "text": "Admin endpoint accessible without authentication"
+              },
+              "defaultConfiguration": {
+                "level": "warning"
+              },
+              "properties": {
+                "tags": [
+                  "security",
+                  "api",
+                  "missing-authentication"
+                ],
+                "precision": "high",
+                "security-severity": "5.0",
+                "cwe": "CWE-306",
+                "owasp": "API2:2023"
+              }
+            }
+          ]
+        }
+      },
+      "results": [
+        {
+          "ruleId": "RICO-001",
+          "level": "error",
+          "message": {
+            "text": "SQL Injection vulnerability in GET /users/search: SQL injection vulnerability detected in search parameter"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "/users/search",
+                  "uriBaseId": "http://localhost:8000"
+                },
+                "region": {
+                  "startLine": 1,
+                  "startColumn": 1
+                }
+              },
+              "logicalLocations": [
+                {
+                  "name": "/users/search",
+                  "kind": "resource"
+                }
+              ]
+            }
+          ],
+          "properties": {
+            "method": "GET",
+            "endpoint": "/users/search",
+            "severity": "CRITICAL",
+            "confidence": 0.95,
+            "proofOfConcept": "curl -X GET 'http://localhost:8000/users/search?q=' OR 1=1--'"
+          }
+        },
+        {
+          "ruleId": "RICO-002",
+          "level": "error",
+          "message": {
+            "text": "IDOR vulnerability in GET /users/{user_id}: Insecure Direct Object Reference vulnerability"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "/users/{user_id}",
+                  "uriBaseId": "http://localhost:8000"
+                },
+                "region": {
+                  "startLine": 1,
+                  "startColumn": 1
+                }
+              },
+              "logicalLocations": [
+                {
+                  "name": "/users/{user_id}",
+                  "kind": "resource"
+                }
+              ]
+            }
+          ],
+          "properties": {
+            "method": "GET",
+            "endpoint": "/users/{user_id}",
+            "severity": "HIGH",
+            "confidence": 0.85,
+            "proofOfConcept": "curl -X GET 'http://localhost:8000/users/999'"
+          }
+        },
+        {
+          "ruleId": "RICO-003",
+          "level": "warning",
+          "message": {
+            "text": "Missing Authentication vulnerability in GET /admin/users: Admin endpoint accessible without authentication"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "/admin/users",
+                  "uriBaseId": "http://localhost:8000"
+                },
+                "region": {
+                  "startLine": 1,
+                  "startColumn": 1
+                }
+              },
+              "logicalLocations": [
+                {
+                  "name": "/admin/users",
+                  "kind": "resource"
+                }
+              ]
+            }
+          ],
+          "properties": {
+            "method": "GET",
+            "endpoint": "/admin/users",
+            "severity": "MEDIUM",
+            "confidence": 0.9,
+            "proofOfConcept": "curl -X GET 'http://localhost:8000/admin/users'"
+          }
+        }
+      ],
+      "invocations": [
+        {
+          "executionSuccessful": true,
+          "endTimeUtc": "2026-02-28T11:19:51.568438Z"
+        }
+      ],
+      "properties": {
+        "targetUrl": "http://localhost:8000",
+        "scanTimestamp": "2026-02-28T11:19:51.568438Z"
+      }
+    }
+  ]
+}
