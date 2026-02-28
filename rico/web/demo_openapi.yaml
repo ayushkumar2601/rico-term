@@ -1,0 +1,111 @@
+openapi: 3.0.0
+info:
+  title: RICO Security Testing Playground
+  description: |
+    Intentionally vulnerable API for testing RICO's security scanning capabilities.
+    
+    ⚠️ WARNING: This API contains intentional security vulnerabilities.
+    DO NOT deploy this in production environments.
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8000
+    description: Local development server
+
+paths:
+  /:
+    get:
+      summary: Root endpoint
+      responses:
+        '200':
+          description: API information
+
+  /health:
+    get:
+      summary: Health check
+      responses:
+        '200':
+          description: API is healthy
+
+  /auth/login:
+    post:
+      summary: User login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+      responses:
+        '200':
+          description: Login successful
+        '401':
+          description: Invalid credentials
+
+  /users/{user_id}:
+    get:
+      summary: Get user by ID (VULNERABLE - IDOR)
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: User data
+        '404':
+          description: User not found
+
+  /users/{user_id}/orders:
+    get:
+      summary: Get user orders (VULNERABLE - IDOR)
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: User orders
+
+  /sqli/search:
+    get:
+      summary: Search users (VULNERABLE - SQLi)
+      parameters:
+        - name: name
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Search results
+        '500':
+          description: SQL error
+
+  /files/read:
+    get:
+      summary: Read file (VULNERABLE - Path Traversal)
+      parameters:
+        - name: filename
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: File content
+
+  /admin/users/vulnerable:
+    get:
+      summary: List users (VULNERABLE - Missing Auth)
+      responses:
+        '200':
+          description: User list

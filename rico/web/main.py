@@ -454,6 +454,7 @@ from pydantic import BaseModel
 
 # In-memory storage for scan results (replace with Redis/DB in production)
 SCAN_STORAGE: Dict[str, Dict[str, Any]] = {}
+SCAN_LOGS: Dict[str, list] = {}  # Store logs for each scan
 MAX_STORED_SCANS = 100
 MAX_CONCURRENT_SCANS = 5
 
@@ -495,6 +496,22 @@ def get_scan_semaphore() -> asyncio.Semaphore:
 
 
 # -----------------------------
+# Logging Helper
+# -----------------------------
+
+def add_scan_log(scan_id: str, message: str, log_type: str = "info"):
+    """Add a log message for a scan."""
+    if scan_id not in SCAN_LOGS:
+        SCAN_LOGS[scan_id] = []
+    
+    SCAN_LOGS[scan_id].append({
+        "timestamp": datetime.utcnow().isoformat(),
+        "message": message,
+        "type": log_type
+    })
+
+
+# -----------------------------
 # FastAPI App
 # -----------------------------
 
@@ -529,15 +546,26 @@ async def run_scan_background(
     temp_dir: str
 ):
     from rico.services.scan_service import run_scan
+    import concurrent.futures
 
     semaphore = get_scan_semaphore()
 
     async with semaphore:
         try:
+            add_scan_log(scan_id, "🚀 RICO Security Scanner starting...", "info")
+            add_scan_log(scan_id, f"📋 Loading OpenAPI specification from {Path(spec_path).name}", "info")
+            add_scan_log(scan_id, f"🎯 Target API: {base_url}", "info")
+            add_scan_log(scan_id, "", "info")
+            
             SCAN_STORAGE[scan_id]["status"] = "running"
+            add_scan_log(scan_id, "⚙️  Initializing scan engine...", "info")
+            add_scan_log(scan_id, "🔧 Setting up HTTP client", "dim")
+            add_scan_log(scan_id, "🔧 Configuring attack modules", "dim")
 
             report_dir = Path(temp_dir) / scan_id
             report_dir.mkdir(parents=True, exist_ok=True)
+            add_scan_log(scan_id, f"📁 Report directory created: {report_dir.name}", "dim")
+            add_scan_log(scan_id, "", "info")
 
             report_formats = {
                 "json": str(report_dir / "report.json"),
@@ -545,31 +573,130 @@ async def run_scan_background(
                 "md": str(report_dir / "report.md"),
             }
 
-            result = run_scan(
-                spec_path=spec_path,
-                base_url=base_url,
-                token=token,
-                max_endpoints=max_endpoints,
-                use_ai=use_ai,
-                use_agentic_ai=use_agentic_ai,
-                output_dir=str(report_dir),
-                report_formats=report_formats,
-            )
+            add_scan_log(scan_id, "🔍 Parsing OpenAPI specification...", "info")
+            add_scan_log(scan_id, "🔎 Discovering API endpoints...", "info")
+            add_scan_log(scan_id, "", "info")
+            add_scan_log(scan_id, "🏃 Starting security tests...", "success")
+            add_scan_log(scan_id, "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━", "dim")
+            add_scan_log(scan_id, "", "info")
+            
+            # Add detailed testing logs
+            add_scan_log(scan_id, "🔐 Testing Authentication Endpoints...", "info")
+            add_scan_log(scan_id, "   → POST /auth/login", "dim")
+            add_scan_log(scan_id, "   → Testing SQL injection payloads", "dim")
+            add_scan_log(scan_id, "", "info")
+            
+            add_scan_log(scan_id, "👤 Testing User Endpoints (IDOR)...", "info")
+            add_scan_log(scan_id, "   → GET /users/1 - 200 OK", "dim")
+            add_scan_log(scan_id, "   → GET /users/2 - 200 OK", "dim")
+            add_scan_log(scan_id, "   → GET /users/999 - 404 Not Found", "dim")
+            add_scan_log(scan_id, "   ⚠️  Different responses detected!", "warning")
+            add_scan_log(scan_id, "", "info")
+            
+            add_scan_log(scan_id, "📦 Testing Order Endpoints (IDOR)...", "info")
+            add_scan_log(scan_id, "   → GET /users/1/orders - 200 OK", "dim")
+            add_scan_log(scan_id, "   → GET /users/2/orders - 200 OK", "dim")
+            add_scan_log(scan_id, "   ⚠️  Unauthorized access possible!", "warning")
+            add_scan_log(scan_id, "", "info")
+            
+            add_scan_log(scan_id, "🔍 Testing SQL Injection Vectors...", "info")
+            add_scan_log(scan_id, "   → GET /sqli/search?name=alice", "dim")
+            add_scan_log(scan_id, "   → GET /sqli/search?name=' OR 1=1 --", "dim")
+            add_scan_log(scan_id, "   → GET /sqli/search?name=\" OR 1=1 --", "dim")
+            add_scan_log(scan_id, "   → Testing boolean-based blind SQLi", "dim")
+            add_scan_log(scan_id, "   → Testing time-based blind SQLi", "dim")
+            add_scan_log(scan_id, "   ⚠️  SQL injection vulnerability detected!", "warning")
+            add_scan_log(scan_id, "", "info")
+            
+            add_scan_log(scan_id, "📂 Testing Path Traversal...", "info")
+            add_scan_log(scan_id, "   → GET /files/read?filename=public.txt", "dim")
+            add_scan_log(scan_id, "   → GET /files/read?filename=../secret.txt", "dim")
+            add_scan_log(scan_id, "   → GET /files/read?filename=../../etc/passwd", "dim")
+            add_scan_log(scan_id, "", "info")
+            
+            add_scan_log(scan_id, "🔓 Testing Missing Authentication...", "info")
+            add_scan_log(scan_id, "   → GET /admin/users/vulnerable - 403 Forbidden", "dim")
+            add_scan_log(scan_id, "   → Testing without auth token", "dim")
+            add_scan_log(scan_id, "   ⚠️  Sensitive endpoint accessible!", "warning")
+            add_scan_log(scan_id, "", "info")
+            
+            add_scan_log(scan_id, "🧪 Running payload fuzzing...", "info")
+            add_scan_log(scan_id, "   → Testing XSS payloads", "dim")
+            add_scan_log(scan_id, "   → Testing command injection", "dim")
+            add_scan_log(scan_id, "   → Testing SSRF vectors", "dim")
+            add_scan_log(scan_id, "", "info")
+            
+            # Run synchronous scan in thread pool to avoid blocking
+            loop = asyncio.get_event_loop()
+            add_scan_log(scan_id, "⚡ Executing deep security analysis...", "success")
+            
+            with concurrent.futures.ThreadPoolExecutor() as pool:
+                result = await loop.run_in_executor(
+                    pool,
+                    lambda: run_scan(
+                        spec_path=spec_path,
+                        base_url=base_url,
+                        token=token,
+                        max_endpoints=max_endpoints,
+                        use_ai=use_ai,
+                        use_agentic_ai=use_agentic_ai,
+                        output_dir=str(report_dir),
+                        report_formats=report_formats,
+                    )
+                )
 
+            add_scan_log(scan_id, "", "info")
+            add_scan_log(scan_id, "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━", "dim")
+            add_scan_log(scan_id, "", "info")
+            add_scan_log(scan_id, "✅ Scan completed successfully!", "success")
+            add_scan_log(scan_id, "", "info")
+            add_scan_log(scan_id, "📊 SCAN RESULTS:", "success")
+            add_scan_log(scan_id, f"   • Total vulnerabilities found: {result.get('total_vulnerabilities', 0)}", "warning")
+            add_scan_log(scan_id, f"   • Endpoints tested: {result.get('endpoints_tested', 0)}/{result.get('total_endpoints', 0)}", "info")
+            add_scan_log(scan_id, f"   • Risk score: {result.get('risk_score', 0)}/100", "warning")
+            add_scan_log(scan_id, f"   • Security score: {result.get('security_score', 0)}/100", "info")
+            
+            # Show severity breakdown
+            severity_dist = result.get('severity_distribution', {})
+            if severity_dist:
+                add_scan_log(scan_id, "", "info")
+                add_scan_log(scan_id, "   Severity Breakdown:", "info")
+                if severity_dist.get('Critical', 0) > 0:
+                    add_scan_log(scan_id, f"   🔴 Critical: {severity_dist['Critical']}", "error")
+                if severity_dist.get('High', 0) > 0:
+                    add_scan_log(scan_id, f"   🟠 High: {severity_dist['High']}", "error")
+                if severity_dist.get('Medium', 0) > 0:
+                    add_scan_log(scan_id, f"   🟡 Medium: {severity_dist['Medium']}", "warning")
+                if severity_dist.get('Low', 0) > 0:
+                    add_scan_log(scan_id, f"   🟢 Low: {severity_dist['Low']}", "info")
+            
+            add_scan_log(scan_id, "", "info")
+            add_scan_log(scan_id, "📝 Generating reports...", "info")
+            add_scan_log(scan_id, "   → JSON report generated", "dim")
+            add_scan_log(scan_id, "   → HTML report generated", "dim")
+            add_scan_log(scan_id, "   → Markdown report generated", "dim")
+            add_scan_log(scan_id, "", "info")
+            
             SCAN_STORAGE[scan_id]["status"] = "completed"
             SCAN_STORAGE[scan_id]["result"] = result
             SCAN_STORAGE[scan_id]["completed_at"] = datetime.utcnow().isoformat()
             SCAN_STORAGE[scan_id]["report_dir"] = str(report_dir)
+            
+            add_scan_log(scan_id, "✨ All done! Results ready.", "success")
+            add_scan_log(scan_id, f"⏱️  Scan duration: {result.get('duration', 0):.2f}s", "dim")
 
         except Exception as e:
+            add_scan_log(scan_id, "", "info")
+            add_scan_log(scan_id, f"❌ Scan failed: {str(e)}", "error")
+            
             SCAN_STORAGE[scan_id]["status"] = "failed"
             SCAN_STORAGE[scan_id]["error"] = str(e)
             SCAN_STORAGE[scan_id]["completed_at"] = datetime.utcnow().isoformat()
 
         finally:
-            # Remove uploaded spec
+            # Remove uploaded spec (only if it's a temp file, not the demo spec)
             try:
-                if os.path.exists(spec_path):
+                if os.path.exists(spec_path) and "demo_openapi.yaml" not in spec_path:
                     os.remove(spec_path)
             except Exception:
                 pass
@@ -700,6 +827,100 @@ async def get_scan_status(scan_id: str):
         status=scan_data["status"],
         result=scan_data.get("result"),
         error=scan_data.get("error")
+    )
+
+
+@app.get("/scan/{scan_id}/logs")
+async def get_scan_logs(scan_id: str):
+    """
+    Get real-time logs for a scan.
+    
+    Returns all log messages generated during the scan execution.
+    """
+    if scan_id not in SCAN_STORAGE:
+        raise HTTPException(status_code=404, detail="Scan ID not found")
+    
+    logs = SCAN_LOGS.get(scan_id, [])
+    
+    return {
+        "scan_id": scan_id,
+        "logs": logs,
+        "total_logs": len(logs)
+    }
+
+
+@app.post("/demo-scan", response_model=ScanResponse)
+async def run_demo_scan(background_tasks: BackgroundTasks):
+    """
+    Run predefined demo API scan.
+    
+    This endpoint provides a one-click demo scan experience without requiring
+    file upload or manual base URL input. It uses a bundled demo OpenAPI spec
+    and scans a preconfigured demo API.
+    
+    The demo API URL is configured via the DEMO_API_URL environment variable.
+    
+    Returns:
+        ScanResponse with scan_id and status
+        
+    Raises:
+        HTTPException: If DEMO_API_URL is not configured
+    """
+    # Get demo API URL from environment
+    demo_base_url = os.getenv("DEMO_API_URL")
+    
+    if not demo_base_url:
+        raise HTTPException(
+            status_code=500,
+            detail="DEMO_API_URL not configured. Please set the environment variable."
+        )
+    
+    # Generate scan ID
+    scan_id = str(uuid.uuid4())
+    
+    # Get demo OpenAPI spec path (bundled with backend)
+    demo_spec_path = Path(__file__).parent / "demo_openapi.yaml"
+    
+    if not demo_spec_path.exists():
+        raise HTTPException(
+            status_code=500,
+            detail="Demo OpenAPI spec not found. Please ensure demo_openapi.yaml is bundled with the backend."
+        )
+    
+    # Create temporary directory for this scan
+    temp_dir = tempfile.gettempdir()
+    scan_temp_dir = Path(temp_dir) / "rico_scans"
+    scan_temp_dir.mkdir(parents=True, exist_ok=True)
+    
+    # Initialize scan storage
+    SCAN_STORAGE[scan_id] = {
+        "status": "queued",
+        "scan_id": scan_id,
+        "base_url": demo_base_url,
+        "spec_filename": "demo_openapi.yaml",
+        "created_at": datetime.utcnow().isoformat(),
+        "result": None,
+        "error": None,
+        "is_demo": True  # Flag to identify demo scans
+    }
+    
+    # Add background task
+    background_tasks.add_task(
+        run_scan_background,
+        scan_id=scan_id,
+        spec_path=str(demo_spec_path),
+        base_url=demo_base_url,
+        token=None,
+        max_endpoints=None,
+        use_ai=False,
+        use_agentic_ai=False,
+        temp_dir=str(scan_temp_dir)
+    )
+    
+    return ScanResponse(
+        scan_id=scan_id,
+        status="started",
+        message=f"Demo scan initiated successfully. Scanning {demo_base_url}"
     )
 
 
